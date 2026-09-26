@@ -1,6 +1,7 @@
 package tech.lokum.parkinglot.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
 import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,11 +22,13 @@ public class Payment {
     @JoinColumn(unique = true, name = "reservation_id", nullable = false)
     private Reservation reservation;
 
+    @Positive
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String currency;
+    private Currency currency;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,14 +50,18 @@ public class Payment {
         PENDING, PAID, REFUNDED, FAILED
     }
 
+    public enum Currency {
+        INR, USD
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Reservation getReservation() { return reservation; }
     public void setReservation(Reservation reservation) { this.reservation = reservation; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
+    public Currency getCurrency() { return currency; }
+    public void setCurrency(Currency currency) { this.currency = currency; }
     public PaymentMethod getMethod() { return method; }
     public void setMethod(PaymentMethod method) { this.method = method; }
     public Status getStatus() { return status; }
