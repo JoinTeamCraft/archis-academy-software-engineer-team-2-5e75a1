@@ -31,13 +31,21 @@ class ParkingLotEntityTest {
     }
 
     @Test
-    void removeSpotClearsOwningSide() {
+    void deactivateSpotSetsMaintenanceAndKeepsAssociation() {
         ParkingLot lot = new ParkingLot();
         ParkingSpot spot = new ParkingSpot();
         lot.addSpot(spot);
-        lot.removeSpot(spot);
-        assertFalse(lot.getSpots().contains(spot));
-        assertNull(spot.getParkingLot());
+        lot.deactivateSpot(spot);
+        assertTrue(lot.getSpots().contains(spot));
+        assertSame(lot, spot.getParkingLot());
+        assertEquals(ParkingSpot.SpotStatus.MAINTENANCE, spot.getStatus());
+    }
+
+    @Test
+    void deactivateSpotThrowsWhenSpotNotInLot() {
+        ParkingLot lot = new ParkingLot();
+        ParkingSpot spot = new ParkingSpot();
+        assertThrows(IllegalArgumentException.class, () -> lot.deactivateSpot(spot));
     }
 
     @Test
