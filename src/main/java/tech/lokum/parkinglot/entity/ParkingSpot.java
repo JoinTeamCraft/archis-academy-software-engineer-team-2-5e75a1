@@ -22,7 +22,7 @@ public class ParkingSpot {
     @JoinColumn(name = "lot_id", nullable = false)
     private ParkingLot parkingLot;
 
-    @Column(nullable = false)
+    @Column(name = "spot_number", nullable = false)
     private String spotNumber;
 
     @Enumerated(EnumType.STRING)
@@ -37,7 +37,7 @@ public class ParkingSpot {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "parkingSpot", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parkingSpot", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Reservation> reservations = new HashSet<>();
 
     public enum SpotType {
