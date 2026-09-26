@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * Represents a parking spot reservation linking a vehicle to a parking spot.
  * Overlap prevention is enforced via pessimistic locking in the service layer.
- * Status transitions: CONFIRMED → CANCELLED | EXPIRED | COMPLETED
+ * Status transitions:  PENDING → CONFIRMED → CANCELLED | EXPIRED | COMPLETED
  */
 @Entity
 @Table(name = "reservations")
