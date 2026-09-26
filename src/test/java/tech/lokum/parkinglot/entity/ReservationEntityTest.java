@@ -27,6 +27,14 @@ class ReservationEntityTest {
     }
 
     @Test
+    void endBeforeStartReturnsFalse() {
+        Reservation reservation = new Reservation();
+        reservation.setStartTime(LocalDateTime.of(2026, 9, 26, 14, 0));
+        reservation.setEndTime(LocalDateTime.of(2026, 9, 26, 10, 0));
+        assertFalse(reservation.isEndAfterStart());
+    }
+
+    @Test
     void entityHasCorrectTableName() {
         var table = Reservation.class.getAnnotation(jakarta.persistence.Table.class);
         assertNotNull(table);
