@@ -13,7 +13,7 @@ import java.util.Set;
  * Password hashing is handled by the service layer — this entity is a pure persistence model.
  */
 @Entity
-@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
+@Table(name = "users")
 public class User {
 
     @Id
