@@ -3,8 +3,6 @@ package tech.lokum.parkinglot.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -15,8 +13,8 @@ import java.time.LocalDateTime;
  * Overlap prevention uses {@link tech.lokum.parkinglot.repository.ReservationRepository}
  * and pessimistic locking in the service layer.
  * Status transitions: PENDING → CONFIRMED → CANCELLED | EXPIRED | COMPLETED.
- * {@code @Future} / {@code @FutureOrPresent} apply when validating new bookings (DTOs/services),
- * not when loading historical rows from the database.
+ * Booking time-window rules (start not in past, end in future, etc.) belong on request DTOs / the service layer,
+ * not on this entity, so historical rows can be loaded and updated safely.
  */
 @Entity
 @Table(name = "reservations")
@@ -51,11 +49,9 @@ public class Reservation {
     @Version
     private Long version;
 
-    @FutureOrPresent (message = "Start time cannot be in the past")
     @Column(nullable = false)
     private LocalDateTime startTime;
 
-    @Future
     @Column(nullable = false)
     private LocalDateTime endTime;
 
@@ -123,10 +119,10 @@ public class Reservation {
         Payment previous = this.payment;
         this.payment = payment;
         if (previous != null) {
-            previous.setReservation(null);
+            previous.linkReservation(null);
         }
         if (payment != null) {
-            payment.setReservation(this);
+            payment.linkReservation(this);
         }
     }
 }
