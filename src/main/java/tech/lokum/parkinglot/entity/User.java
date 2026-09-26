@@ -3,7 +3,6 @@ package tech.lokum.parkinglot.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,6 +10,7 @@ import java.util.Set;
 /**
  * Represents a system user with role-based access.
  * ADMIN: full access, OPERATOR: manages parking lots, CUSTOMER: books spots.
+ * Password hashing is handled by the service layer — this entity is a pure persistence model.
  */
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
@@ -26,9 +26,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -51,8 +51,6 @@ public class User {
         ADMIN, OPERATOR, CUSTOMER
     }
 
-    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -60,7 +58,8 @@ public class User {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public void setPassword(String password) { this.password = encoder.encode(password); }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getPasswordHash() { return passwordHash; }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
