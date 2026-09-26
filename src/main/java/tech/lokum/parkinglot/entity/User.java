@@ -81,6 +81,9 @@ public class User {
     }
 
     public void addParkingLot(ParkingLot lot) {
+        if (lot.getOperator() != null && lot.getOperator() != this) {
+            throw new IllegalStateException("ParkingLot already has an operator");
+        }
         lot.setOperator(this);
         parkingLots.add(lot);
     }
