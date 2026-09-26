@@ -22,6 +22,25 @@ class ParkingLotEntityTest {
     }
 
     @Test
+    void addSpotSyncsBothSides() {
+        ParkingLot lot = new ParkingLot();
+        ParkingSpot spot = new ParkingSpot();
+        lot.addSpot(spot);
+        assertTrue(lot.getSpots().contains(spot));
+        assertSame(lot, spot.getParkingLot());
+    }
+
+    @Test
+    void removeSpotClearsOwningSide() {
+        ParkingLot lot = new ParkingLot();
+        ParkingSpot spot = new ParkingSpot();
+        lot.addSpot(spot);
+        lot.removeSpot(spot);
+        assertFalse(lot.getSpots().contains(spot));
+        assertNull(spot.getParkingLot());
+    }
+
+    @Test
     void entityHasCorrectTableName() {
         var table = ParkingLot.class.getAnnotation(jakarta.persistence.Table.class);
         assertNotNull(table);

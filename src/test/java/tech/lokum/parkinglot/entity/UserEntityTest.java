@@ -22,6 +22,33 @@ class UserEntityTest {
     }
 
     @Test
+    void addVehicleSyncsBothSides() {
+        User user = new User();
+        Vehicle vehicle = new Vehicle();
+        user.addVehicle(vehicle);
+        assertTrue(user.getVehicles().contains(vehicle));
+        assertSame(user, vehicle.getUser());
+    }
+
+    @Test
+    void addParkingLotSyncsBothSides() {
+        User user = new User();
+        ParkingLot lot = new ParkingLot();
+        user.addParkingLot(lot);
+        assertTrue(user.getParkingLots().contains(lot));
+        assertSame(user, lot.getOperator());
+    }
+
+    @Test
+    void addParkingLotThrowsWhenLotHasDifferentOperator() {
+        User user = new User();
+        User other = new User();
+        ParkingLot lot = new ParkingLot();
+        lot.setOperator(other);
+        assertThrows(IllegalStateException.class, () -> user.addParkingLot(lot));
+    }
+
+    @Test
     void entityHasCorrectTableName() {
         var table = User.class.getAnnotation(jakarta.persistence.Table.class);
         assertNotNull(table);
