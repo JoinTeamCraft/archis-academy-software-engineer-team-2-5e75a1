@@ -1,5 +1,6 @@
 package tech.lokum.parkinglot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
@@ -30,7 +31,9 @@ public class ParkingLot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operator_id", nullable = false)
+    @JsonIgnore
     private User operator;
+
 
     @OneToMany(mappedBy = "parkingLot", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ParkingSpot> spots = new HashSet<>();
@@ -55,5 +58,16 @@ public class ParkingLot {
     public void setOperator(User operator) { this.operator = operator; }
     public Set<ParkingSpot> getSpots() { return spots; }
     public void setSpots(Set<ParkingSpot> spots) { this.spots = spots; }
+
+    public void addSpot(ParkingSpot spot) {
+        spots.add(spot);
+        spot.setParkingLot(this);
+    }
+
+    public void removeSpot(ParkingSpot spot) {
+        spots.remove(spot);
+        spot.setParkingLot(null);
+    }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
