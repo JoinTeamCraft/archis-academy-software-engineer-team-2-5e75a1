@@ -39,7 +39,7 @@ public class ParkingLot {
 
 
     @JsonIgnore
-    @OneToMany(mappedBy = "parkingLot", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parkingLot", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ParkingSpot> spots = new HashSet<>();
 
     @CreationTimestamp
@@ -70,6 +70,7 @@ public class ParkingLot {
 
     public void removeSpot(ParkingSpot spot) {
         spots.remove(spot);
+        spot.setParkingLot(null);
     }
 
     public LocalDateTime getCreatedAt() { return createdAt; }

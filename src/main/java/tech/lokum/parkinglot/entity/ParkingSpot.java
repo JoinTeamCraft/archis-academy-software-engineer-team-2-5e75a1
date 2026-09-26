@@ -23,7 +23,7 @@ public class ParkingSpot {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lot_id", nullable = false)
+    @JoinColumn(name = "lot_id")
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private ParkingLot parkingLot;
 
