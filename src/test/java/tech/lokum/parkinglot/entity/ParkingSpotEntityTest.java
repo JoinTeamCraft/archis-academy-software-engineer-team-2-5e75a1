@@ -29,6 +29,16 @@ class ParkingSpotEntityTest {
     }
 
     @Test
+    void parkingLotJoinColumnIsRequired() throws NoSuchFieldException {
+        var joinColumn = ParkingSpot.class
+                .getDeclaredField("parkingLot")
+                .getAnnotation(jakarta.persistence.JoinColumn.class);
+        assertNotNull(joinColumn);
+        assertEquals("lot_id", joinColumn.name());
+        assertFalse(joinColumn.nullable());
+    }
+
+    @Test
     void spotTypeEnumContainsExpectedValues() {
         assertEquals(4, ParkingSpot.SpotType.values().length);
         assertNotNull(ParkingSpot.SpotType.CAR);

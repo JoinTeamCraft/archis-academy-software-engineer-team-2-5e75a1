@@ -49,6 +49,21 @@ class UserEntityTest {
     }
 
     @Test
+    void addParkingLotThrowsWhenLotAlreadyHasSameOperator() {
+        User user = new User();
+        ParkingLot lot = new ParkingLot();
+        lot.setOperator(user);
+        assertThrows(IllegalStateException.class, () -> user.addParkingLot(lot));
+    }
+
+    @Test
+    void setPasswordHashStoresValueUnchanged() {
+        User user = new User();
+        user.setPasswordHash("bcrypt-hash-from-service");
+        assertEquals("bcrypt-hash-from-service", user.getPasswordHash());
+    }
+
+    @Test
     void entityHasCorrectTableName() {
         var table = User.class.getAnnotation(jakarta.persistence.Table.class);
         assertNotNull(table);

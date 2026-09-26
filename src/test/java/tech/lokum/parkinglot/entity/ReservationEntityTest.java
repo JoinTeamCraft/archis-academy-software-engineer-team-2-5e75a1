@@ -50,4 +50,41 @@ class ReservationEntityTest {
         assertNotNull(Reservation.Status.EXPIRED);
         assertNotNull(Reservation.Status.COMPLETED);
     }
+
+    @Test
+    void setPaymentSyncsBothSides() {
+        Reservation reservation = new Reservation();
+        Payment payment = new Payment();
+        reservation.setPayment(payment);
+        assertSame(payment, reservation.getPayment());
+        assertSame(reservation, payment.getReservation());
+    }
+
+    @Test
+    void setPaymentClearsPreviousAssociation() {
+        Reservation reservation = new Reservation();
+        Payment first = new Payment();
+        Payment second = new Payment();
+        reservation.setPayment(first);
+        reservation.setPayment(second);
+        assertSame(second, reservation.getPayment());
+        assertNull(first.getReservation());
+        assertSame(reservation, second.getReservation());
+    }
+
+    @Test
+    void customerMustOwnVehicle() {
+        User owner = new User();
+        owner.setId(1L);
+        User other = new User();
+        other.setId(2L);
+        Vehicle vehicle = new Vehicle();
+        vehicle.setUser(owner);
+        Reservation reservation = new Reservation();
+        reservation.setVehicle(vehicle);
+        reservation.setCustomer(owner);
+        assertTrue(reservation.isCustomerOwningVehicle());
+        reservation.setCustomer(other);
+        assertFalse(reservation.isCustomerOwningVehicle());
+    }
 }
