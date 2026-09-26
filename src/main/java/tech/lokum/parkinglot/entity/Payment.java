@@ -1,5 +1,6 @@
 package tech.lokum.parkinglot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,6 +19,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(unique = true, name = "reservation_id", nullable = false)
     private Reservation reservation;

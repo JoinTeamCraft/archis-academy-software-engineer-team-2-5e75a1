@@ -1,5 +1,6 @@
 package tech.lokum.parkinglot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
@@ -37,6 +38,7 @@ public class Reservation {
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private User customer;
 
+    @JsonIgnore
     @OneToOne(mappedBy = "reservation", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Payment payment;
 
