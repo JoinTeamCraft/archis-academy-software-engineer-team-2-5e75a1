@@ -12,9 +12,8 @@ import java.util.Set;
 /**
  * Represents a parking lot owned by an operator.
  * Contains multiple parking spots.
- * {@link #removeSpot(ParkingSpot)} removes the spot from this lot and deletes the row ({@code orphanRemoval});
- * deletion fails at the database if active {@link Reservation} rows reference the spot (FK RESTRICT).
- * Prefer {@link ParkingSpot.SpotStatus#MAINTENANCE} in services when history must be preserved.
+ * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
+ * out of service while preserving reservation history and FK relationships.
  */
 @Entity
 @Table(name = "parking_lots")
@@ -42,7 +41,7 @@ public class ParkingLot {
 
 
     @JsonIgnore
-    @OneToMany(mappedBy = "parkingLot", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parkingLot", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<ParkingSpot> spots = new HashSet<>();
 
     @CreationTimestamp
@@ -71,9 +70,11 @@ public class ParkingLot {
         spot.setParkingLot(this);
     }
 
-    public void removeSpot(ParkingSpot spot) {
-        spots.remove(spot);
-        spot.setParkingLot(null);
+    public void deactivateSpot(ParkingSpot spot) {
+        if (!spots.contains(spot)) {
+            throw new IllegalArgumentException("Spot is not part of this parking lot");
+        }
+        spot.setStatus(ParkingSpot.SpotStatus.MAINTENANCE);
     }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
