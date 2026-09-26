@@ -12,14 +12,14 @@ class PaymentEntityTest {
         payment.setId(1L);
         payment.setReservation(new Reservation());
         payment.setAmount(new BigDecimal("50.00"));
-        payment.setCurrency("USD");
+        payment.setCurrency(Payment.Currency.USD);
         payment.setMethod(Payment.PaymentMethod.CARD);
         payment.setStatus(Payment.Status.PENDING);
 
         assertEquals(1L, payment.getId());
         assertNotNull(payment.getReservation());
         assertEquals(new BigDecimal("50.00"), payment.getAmount());
-        assertEquals("USD", payment.getCurrency());
+        assertEquals(Payment.Currency.USD, payment.getCurrency());
         assertEquals(Payment.PaymentMethod.CARD, payment.getMethod());
         assertEquals(Payment.Status.PENDING, payment.getStatus());
     }
@@ -47,5 +47,12 @@ class PaymentEntityTest {
         assertNotNull(Payment.Status.PAID);
         assertNotNull(Payment.Status.REFUNDED);
         assertNotNull(Payment.Status.FAILED);
+    }
+
+    @Test
+    void currencyEnumContainsExpectedValues() {
+        assertEquals(2, Payment.Currency.values().length);
+        assertNotNull(Payment.Currency.INR);
+        assertNotNull(Payment.Currency.USD);
     }
 }
