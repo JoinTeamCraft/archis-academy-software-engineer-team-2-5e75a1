@@ -12,6 +12,9 @@ import java.util.Set;
 /**
  * Represents a parking lot owned by an operator.
  * Contains multiple parking spots.
+ * {@link #removeSpot(ParkingSpot)} removes the spot from this lot and deletes the row ({@code orphanRemoval});
+ * deletion fails at the database if active {@link Reservation} rows reference the spot (FK RESTRICT).
+ * Prefer {@link ParkingSpot.SpotStatus#MAINTENANCE} in services when history must be preserved.
  */
 @Entity
 @Table(name = "parking_lots")

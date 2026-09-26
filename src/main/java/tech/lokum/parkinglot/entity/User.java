@@ -1,7 +1,6 @@
 package tech.lokum.parkinglot.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
@@ -28,7 +27,7 @@ public class User {
     private String email;
 
     @Column(name = "password_hash", nullable = false)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonIgnore
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -80,8 +79,11 @@ public class User {
         vehicles.add(vehicle);
     }
 
+    /**
+     * Attaches a new, unpersisted lot to this operator. Does not reassign lots that already have an operator.
+     */
     public void addParkingLot(ParkingLot lot) {
-        if (lot.getOperator() != null && lot.getOperator() != this) {
+        if (lot.getOperator() != null) {
             throw new IllegalStateException("ParkingLot already has an operator");
         }
         lot.setOperator(this);

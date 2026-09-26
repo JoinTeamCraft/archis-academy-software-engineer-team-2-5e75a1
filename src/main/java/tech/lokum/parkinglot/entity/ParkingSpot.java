@@ -12,6 +12,8 @@ import java.util.Set;
 /**
  * Represents a single parking spot within a parking lot.
  * Each spot has a type and an availability status.
+ * {@link SpotStatus#OCCUPIED} / {@link SpotStatus#AVAILABLE} are operator-facing;
+ * time-window availability is derived from {@link Reservation} records in the service layer.
  */
 @Entity
 @Table(name = "parking_spots", uniqueConstraints = @UniqueConstraint(columnNames = {"lot_id", "spot_number"}))
@@ -23,7 +25,7 @@ public class ParkingSpot {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lot_id")
+    @JoinColumn(name = "lot_id", nullable = false, updatable = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private ParkingLot parkingLot;
 

@@ -1,5 +1,6 @@
 package tech.lokum.parkinglot.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
@@ -10,7 +11,7 @@ import java.util.Set;
 
 /**
  * Represents a vehicle registered by a customer.
- * Vehicle type must match the parking spot type during booking.
+ * {@link VehicleType} must match {@link ParkingSpot.SpotType} at booking time (enforced in the service layer).
  */
 @Entity
 @Table(name = "vehicles")
@@ -20,6 +21,7 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
@@ -38,6 +40,7 @@ public class Vehicle {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "vehicle", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<Reservation> reservations = new HashSet<>();
 
