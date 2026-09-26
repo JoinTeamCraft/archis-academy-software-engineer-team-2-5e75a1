@@ -43,9 +43,11 @@ public class User {
     @OneToMany(mappedBy = "operator", cascade = {CascadeType.PERSIST,CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<ParkingLot> parkingLots = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST,CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<Vehicle> vehicles = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "customer", cascade = {CascadeType.PERSIST,CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<Reservation> reservations = new HashSet<>();
 
