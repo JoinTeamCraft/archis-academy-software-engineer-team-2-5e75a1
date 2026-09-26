@@ -31,7 +31,7 @@ public class ParkingSpot {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SpotStatus status;
+    private SpotStatus status = SpotStatus.AVAILABLE;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
