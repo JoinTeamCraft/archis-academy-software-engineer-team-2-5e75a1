@@ -1,6 +1,7 @@
 package tech.lokum.parkinglot.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
@@ -29,9 +30,11 @@ public class Reservation {
     @JoinColumn(name = "customer_id", nullable = false)
     private User customer;
 
+    @Future
     @Column(nullable = false)
     private LocalDateTime startTime;
 
+    @Future
     @Column(nullable = false)
     private LocalDateTime endTime;
 
