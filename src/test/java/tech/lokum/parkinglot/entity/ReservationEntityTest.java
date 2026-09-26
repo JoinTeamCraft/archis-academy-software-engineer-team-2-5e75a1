@@ -16,12 +16,14 @@ class ReservationEntityTest {
         reservation.setStartTime(LocalDateTime.of(2026, 9, 26, 10, 0));
         reservation.setEndTime(LocalDateTime.of(2026, 9, 26, 14, 0));
         reservation.setStatus(Reservation.Status.CONFIRMED);
+        reservation.isEndAfterStart();
 
         assertEquals(1L, reservation.getId());
         assertNotNull(reservation.getVehicle());
         assertNotNull(reservation.getParkingSpot());
         assertNotNull(reservation.getCustomer());
         assertEquals(Reservation.Status.CONFIRMED, reservation.getStatus());
+        assertTrue(reservation.isEndAfterStart());
     }
 
     @Test
@@ -33,7 +35,8 @@ class ReservationEntityTest {
 
     @Test
     void statusEnumContainsExpectedValues() {
-        assertEquals(4, Reservation.Status.values().length);
+        assertEquals(5, Reservation.Status.values().length);
+        assertNotNull(Reservation.Status.PENDING);
         assertNotNull(Reservation.Status.CONFIRMED);
         assertNotNull(Reservation.Status.CANCELLED);
         assertNotNull(Reservation.Status.EXPIRED);
