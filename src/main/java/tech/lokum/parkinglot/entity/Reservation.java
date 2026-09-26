@@ -12,8 +12,11 @@ import java.time.LocalDateTime;
 
 /**
  * Represents a parking spot reservation linking a vehicle to a parking spot.
- * Overlap prevention is enforced via pessimistic locking in the service layer.
- * Status transitions:  PENDING → CONFIRMED → CANCELLED | EXPIRED | COMPLETED
+ * Overlap prevention uses {@link tech.lokum.parkinglot.repository.ReservationRepository}
+ * and pessimistic locking in the service layer.
+ * Status transitions: PENDING → CONFIRMED → CANCELLED | EXPIRED | COMPLETED.
+ * {@code @Future} / {@code @FutureOrPresent} apply when validating new bookings (DTOs/services),
+ * not when loading historical rows from the database.
  */
 @Entity
 @Table(name = "reservations")
@@ -23,16 +26,19 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private Vehicle vehicle;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "spot_id", nullable = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private ParkingSpot parkingSpot;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     @OnDelete(action = OnDeleteAction.RESTRICT)
@@ -66,11 +72,23 @@ public class Reservation {
     }
 
     @AssertTrue(message = "End time must be after start time")
-    public boolean isEndAfterStart(){
-        if(startTime == null || endTime == null){
+    public boolean isEndAfterStart() {
+        if (startTime == null || endTime == null) {
             return true;
         }
         return endTime.isAfter(startTime);
+    }
+
+    @AssertTrue(message = "Customer must be the owner of the vehicle")
+    public boolean isCustomerOwningVehicle() {
+        if (customer == null || vehicle == null || vehicle.getUser() == null) {
+            return true;
+        }
+        User owner = vehicle.getUser();
+        if (owner.getId() != null && customer.getId() != null) {
+            return owner.getId().equals(customer.getId());
+        }
+        return owner == customer;
     }
 
     public Long getId() { return id; }
@@ -90,4 +108,25 @@ public class Reservation {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Long getVersion() { return version; }
     public void setVersion(Long version) { this.version = version; }
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    /**
+     * Keeps the bidirectional {@link Payment} association in sync (owning side is {@link Payment#reservation}).
+     */
+    public void setPayment(Payment payment) {
+        if (this.payment == payment) {
+            return;
+        }
+        Payment previous = this.payment;
+        this.payment = payment;
+        if (previous != null) {
+            previous.setReservation(null);
+        }
+        if (payment != null) {
+            payment.setReservation(this);
+        }
+    }
 }
