@@ -1,7 +1,9 @@
 package tech.lokum.parkinglot.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
@@ -30,7 +32,7 @@ public class Reservation {
     @JoinColumn(name = "customer_id", nullable = false)
     private User customer;
 
-    @Future
+    @FutureOrPresent (message = "Start time cannot be in the past")
     @Column(nullable = false)
     private LocalDateTime startTime;
 
@@ -40,14 +42,22 @@ public class Reservation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status;
+    private Status status = Status.PENDING;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public enum Status {
-        CONFIRMED, CANCELLED, EXPIRED, COMPLETED
+        PENDING, CONFIRMED, CANCELLED, EXPIRED, COMPLETED
+    }
+
+    @AssertTrue(message = "End time must be after start time")
+    public boolean isEndAfterStart(){
+        if(startTime == null || endTime == null){
+            return true;
+        }
+        return endTime.isAfter(startTime);
     }
 
     public Long getId() { return id; }
