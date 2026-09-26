@@ -74,4 +74,14 @@ public class User {
     public void setVehicles(Set<Vehicle> vehicles) { this.vehicles = vehicles; }
     public Set<Reservation> getReservations() { return reservations; }
     public void setReservations(Set<Reservation> reservations) { this.reservations = reservations; }
+
+    public void addVehicle(Vehicle vehicle) {
+        vehicle.setUser(this);
+        vehicles.add(vehicle);
+    }
+
+    public void addParkingLot(ParkingLot lot) {
+        lot.setOperator(this);
+        parkingLots.add(lot);
+    }
 }

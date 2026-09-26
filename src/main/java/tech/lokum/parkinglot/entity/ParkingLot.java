@@ -32,7 +32,7 @@ public class ParkingLot {
     private Status status = Status.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "operator_id", nullable = false)
+    @JoinColumn(name = "operator_id", nullable = false, updatable = false)
     @JsonIgnore
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private User operator;
@@ -70,7 +70,6 @@ public class ParkingLot {
 
     public void removeSpot(ParkingSpot spot) {
         spots.remove(spot);
-        spot.setParkingLot(null);
     }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
