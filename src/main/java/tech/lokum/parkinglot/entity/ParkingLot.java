@@ -32,7 +32,7 @@ public class ParkingLot {
     @JoinColumn(name = "operator_id", nullable = false)
     private User operator;
 
-    @OneToMany(mappedBy = "parkingLot", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parkingLot", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ParkingSpot> spots = new HashSet<>();
 
     @CreationTimestamp

@@ -11,7 +11,7 @@ import java.util.Set;
  * Each spot has a type and an availability status.
  */
 @Entity
-@Table(name = "parking_spots")
+@Table(name = "parking_spots", uniqueConstraints = @UniqueConstraint(columnNames = {"lot_id", "spot_number"}))
 public class ParkingSpot {
 
     @Id
@@ -22,7 +22,7 @@ public class ParkingSpot {
     @JoinColumn(name = "lot_id", nullable = false)
     private ParkingLot parkingLot;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String spotNumber;
 
     @Enumerated(EnumType.STRING)
