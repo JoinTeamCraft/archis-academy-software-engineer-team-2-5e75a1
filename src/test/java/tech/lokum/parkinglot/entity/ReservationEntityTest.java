@@ -26,7 +26,9 @@ class ReservationEntityTest {
 
     @Test
     void entityHasCorrectTableName() {
-        assertEquals(Reservation.class.getAnnotation(jakarta.persistence.Table.class).name(), "reservations");
+        var table = Reservation.class.getAnnotation(jakarta.persistence.Table.class);
+        assertNotNull(table);
+        assertEquals("reservations", table.name());
     }
 
     @Test

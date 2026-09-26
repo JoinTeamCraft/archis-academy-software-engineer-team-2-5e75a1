@@ -23,7 +23,9 @@ class VehicleEntityTest {
 
     @Test
     void entityHasCorrectTableName() {
-        assertEquals(Vehicle.class.getAnnotation(jakarta.persistence.Table.class).name(), "vehicles");
+        var table = Vehicle.class.getAnnotation(jakarta.persistence.Table.class);
+        assertNotNull(table);
+        assertEquals("vehicles", table.name());
     }
 
     @Test

@@ -12,21 +12,23 @@ class PaymentEntityTest {
         payment.setId(1L);
         payment.setReservation(new Reservation());
         payment.setAmount(new BigDecimal("50.00"));
-        payment.setCurrency("INR");
+        payment.setCurrency("USD");
         payment.setMethod(Payment.PaymentMethod.CARD);
         payment.setStatus(Payment.Status.PENDING);
 
         assertEquals(1L, payment.getId());
         assertNotNull(payment.getReservation());
         assertEquals(new BigDecimal("50.00"), payment.getAmount());
-        assertEquals("INR", payment.getCurrency());
+        assertEquals("USD", payment.getCurrency());
         assertEquals(Payment.PaymentMethod.CARD, payment.getMethod());
         assertEquals(Payment.Status.PENDING, payment.getStatus());
     }
 
     @Test
     void entityHasCorrectTableName() {
-        assertEquals(Payment.class.getAnnotation(jakarta.persistence.Table.class).name(), "payments");
+        var table = Payment.class.getAnnotation(jakarta.persistence.Table.class);
+        assertNotNull(table);
+        assertEquals("payments", table.name());
     }
 
     @Test

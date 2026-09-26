@@ -9,20 +9,23 @@ class UserEntityTest {
     void entityGettersAndSettersWork() {
         User user = new User();
         user.setId(1L);
-        user.setName("Rahul");
-        user.setEmail("rahul@test.com");
-        user.setPassword("hashed");
+        user.setName("John");
+        user.setEmail("john@test.com");
+        user.setPasswordHash("hashed");
         user.setRole(User.Role.CUSTOMER);
 
         assertEquals(1L, user.getId());
-        assertEquals("Rahul", user.getName());
-        assertEquals("rahul@test.com", user.getEmail());
+        assertEquals("John", user.getName());
+        assertEquals("john@test.com", user.getEmail());
+        assertEquals("hashed", user.getPasswordHash());
         assertEquals(User.Role.CUSTOMER, user.getRole());
     }
 
     @Test
     void entityHasCorrectTableName() {
-        assertEquals(User.class.getAnnotation(jakarta.persistence.Table.class).name(), "users");
+        var table = User.class.getAnnotation(jakarta.persistence.Table.class);
+        assertNotNull(table);
+        assertEquals("users", table.name());
     }
 
     @Test

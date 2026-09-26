@@ -23,7 +23,9 @@ class ParkingSpotEntityTest {
 
     @Test
     void entityHasCorrectTableName() {
-        assertEquals(ParkingSpot.class.getAnnotation(jakarta.persistence.Table.class).name(), "parking_spots");
+        var table = ParkingSpot.class.getAnnotation(jakarta.persistence.Table.class);
+        assertNotNull(table);
+        assertEquals("parking_spots", table.name());
     }
 
     @Test

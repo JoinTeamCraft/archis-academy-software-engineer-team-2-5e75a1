@@ -9,21 +9,23 @@ class ParkingLotEntityTest {
     void entityGettersAndSettersWork() {
         ParkingLot lot = new ParkingLot();
         lot.setId(1L);
-        lot.setName("Parking test Lot");
-        lot.setAddress("123 test St");
+        lot.setName("Downtown Lot");
+        lot.setAddress("123 Main St");
         lot.setStatus(ParkingLot.Status.ACTIVE);
         lot.setOperator(new User());
 
         assertEquals(1L, lot.getId());
-        assertEquals("Parking test Lot", lot.getName());
-        assertEquals("123 test St", lot.getAddress());
+        assertEquals("Downtown Lot", lot.getName());
+        assertEquals("123 Main St", lot.getAddress());
         assertEquals(ParkingLot.Status.ACTIVE, lot.getStatus());
         assertNotNull(lot.getOperator());
     }
 
     @Test
     void entityHasCorrectTableName() {
-        assertEquals(ParkingLot.class.getAnnotation(jakarta.persistence.Table.class).name(), "parking_lots");
+        var table = ParkingLot.class.getAnnotation(jakarta.persistence.Table.class);
+        assertNotNull(table);
+        assertEquals("parking_lots", table.name());
     }
 
     @Test
