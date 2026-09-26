@@ -10,14 +10,15 @@ class PaymentEntityTest {
     void entityGettersAndSettersWork() {
         Payment payment = new Payment();
         payment.setId(1L);
-        payment.setReservation(new Reservation());
+        Reservation reservation = new Reservation();
+        reservation.setPayment(payment);
         payment.setAmount(new BigDecimal("50.00"));
         payment.setCurrency(Payment.Currency.USD);
         payment.setMethod(Payment.PaymentMethod.CARD);
         payment.setStatus(Payment.Status.PENDING);
 
         assertEquals(1L, payment.getId());
-        assertNotNull(payment.getReservation());
+        assertSame(reservation, payment.getReservation());
         assertEquals(new BigDecimal("50.00"), payment.getAmount());
         assertEquals(Payment.Currency.USD, payment.getCurrency());
         assertEquals(Payment.PaymentMethod.CARD, payment.getMethod());
