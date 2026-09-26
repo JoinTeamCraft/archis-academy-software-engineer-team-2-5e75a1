@@ -1,0 +1,65 @@
+package tech.lokum.parkinglot.entity;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+
+/**
+ * Represents a parking spot reservation linking a vehicle to a parking spot.
+ * Overlap prevention is enforced via pessimistic locking in the service layer.
+ * Status transitions: CONFIRMED → CANCELLED | EXPIRED | COMPLETED
+ */
+@Entity
+@Table(name = "reservations")
+public class Reservation {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spot_id", nullable = false)
+    private ParkingSpot parkingSpot;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User customer;
+
+    @Column(nullable = false)
+    private LocalDateTime startTime;
+
+    @Column(nullable = false)
+    private LocalDateTime endTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public enum Status {
+        CONFIRMED, CANCELLED, EXPIRED, COMPLETED
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Vehicle getVehicle() { return vehicle; }
+    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
+    public ParkingSpot getParkingSpot() { return parkingSpot; }
+    public void setParkingSpot(ParkingSpot parkingSpot) { this.parkingSpot = parkingSpot; }
+    public User getCustomer() { return customer; }
+    public void setCustomer(User customer) { this.customer = customer; }
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+}

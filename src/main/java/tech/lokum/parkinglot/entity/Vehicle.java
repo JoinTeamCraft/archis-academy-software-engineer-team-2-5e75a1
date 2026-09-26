@@ -1,0 +1,58 @@
+package tech.lokum.parkinglot.entity;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Represents a vehicle registered by a customer.
+ * Vehicle type must match the parking spot type during booking.
+ */
+@Entity
+@Table(name = "vehicles")
+public class Vehicle {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false, unique = true)
+    private String licensePlate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VehicleType type;
+
+    private String color;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Reservation> reservations = new HashSet<>();
+
+    public enum VehicleType {
+        CAR, MOTORBIKE, TRUCK, EV
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public String getLicensePlate() { return licensePlate; }
+    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }
+    public VehicleType getType() { return type; }
+    public void setType(VehicleType type) { this.type = type; }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Set<Reservation> getReservations() { return reservations; }
+    public void setReservations(Set<Reservation> reservations) { this.reservations = reservations; }
+}
