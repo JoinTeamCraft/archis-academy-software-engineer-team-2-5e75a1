@@ -11,9 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represents a parking lot that may be awaiting operator assignment.
- * Operator ownership is optional because the create-lot API does not currently include
- * operator identity or authentication context.
+ * Represents a parking lot owned by an operator.
  * Contains multiple parking spots.
  * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
  * method deactivateSpot(ParkingSpot) requires service level validation that the spot is not active/occupied
@@ -23,11 +21,13 @@ import java.util.Set;
 @Table(
         name = "parking_lots",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_parking_lot_name_address_status",
-                columnNames = {"name", "address", "status"}
+                name = ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT,
+                columnNames = {"name", "address"}
         )
 )
 public class ParkingLot {
+
+    public static final String UNIQUE_NAME_ADDRESS_CONSTRAINT = "uk_parking_lot_name_address";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,7 +47,7 @@ public class ParkingLot {
     private Status status = Status.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "operator_id", nullable = true, updatable = false)
+    @JoinColumn(name = "operator_id", nullable = false, updatable = false)
     @JsonIgnore
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private User operator;

@@ -47,8 +47,8 @@ public class ParkingLotController {
      */
     @Operation(
             summary = "Create a parking lot",
-            description = "Creates a parking lot with its name, location, and total capacity. "
-                    + "Operator ownership is not assigned by this endpoint."
+            description = "Creates a parking lot for an existing OPERATOR user identified by operatorId. "
+                    + "An administrator creating a lot on an operator's behalf supplies the owning operator's ID."
     )
     @ApiResponse(
             responseCode = "201",
@@ -62,7 +62,17 @@ public class ParkingLotController {
     )
     @ApiResponse(
             responseCode = "409",
-            description = "An active parking lot already exists with this name and location",
+            description = "A parking lot already exists with this name and location",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "The requested user is not an operator",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "The requested operator does not exist",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
     )
     @PostMapping

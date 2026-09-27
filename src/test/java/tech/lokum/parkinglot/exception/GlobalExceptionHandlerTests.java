@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import tech.lokum.parkinglot.entity.ParkingLot;
 
 import java.sql.SQLException;
 
@@ -58,7 +59,7 @@ class GlobalExceptionHandlerTests {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message")
-                        .value("An active parking lot already exists with this name and location"))
+                        .value("A parking lot already exists with this name and location"))
                 .andExpect(jsonPath("$.path").value("/test/duplicate"));
     }
 
@@ -114,7 +115,7 @@ class GlobalExceptionHandlerTests {
             var constraintViolation = new org.hibernate.exception.ConstraintViolationException(
                     "Duplicate parking lot",
                     new SQLException("Unique constraint violation"),
-                    "uk_parking_lot_name_address_status"
+                    ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT
             );
             throw new DataIntegrityViolationException("Duplicate parking lot", constraintViolation);
         }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tech.lokum.parkinglot.dto.ErrorResponse;
+import tech.lokum.parkinglot.entity.ParkingLot;
 
 import java.time.Instant;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class GlobalExceptionHandler {
         if (isParkingLotDuplicate(exception)) {
             return errorResponse(
                     HttpStatus.CONFLICT,
-                    "An active parking lot already exists with this name and location",
+                    "A parking lot already exists with this name and location",
                     request
             );
         }
@@ -123,7 +124,12 @@ public class GlobalExceptionHandler {
         Throwable cause = exception;
         while (cause != null) {
             if (cause instanceof org.hibernate.exception.ConstraintViolationException violation
-                    && "uk_parking_lot_name_address_status".equals(violation.getConstraintName())) {
+                    && ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT.equals(violation.getConstraintName())) {
+                return true;
+            }
+            if (cause.getMessage() != null
+                    && cause.getMessage().toLowerCase(java.util.Locale.ROOT)
+                    .contains(ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT)) {
                 return true;
             }
             cause = cause.getCause();

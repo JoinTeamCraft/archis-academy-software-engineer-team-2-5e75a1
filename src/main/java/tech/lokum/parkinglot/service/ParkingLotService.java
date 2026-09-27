@@ -5,8 +5,13 @@ import org.springframework.transaction.annotation.Transactional;
 import tech.lokum.parkinglot.dto.CreateParkingLotRequest;
 import tech.lokum.parkinglot.dto.ParkingLotResponse;
 import tech.lokum.parkinglot.entity.ParkingLot;
+import tech.lokum.parkinglot.entity.User;
+import tech.lokum.parkinglot.exception.BusinessException;
 import tech.lokum.parkinglot.exception.ParkingLotAlreadyExistsException;
+import tech.lokum.parkinglot.exception.ResourceNotFoundException;
 import tech.lokum.parkinglot.repository.ParkingLotRepository;
+import tech.lokum.parkinglot.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 
 /**
  * Business operations for parking lots.
@@ -19,9 +24,11 @@ import tech.lokum.parkinglot.repository.ParkingLotRepository;
 public class ParkingLotService {
 
     private final ParkingLotRepository parkingLotRepository;
+    private final UserRepository userRepository;
 
-    public ParkingLotService(ParkingLotRepository parkingLotRepository) {
+    public ParkingLotService(ParkingLotRepository parkingLotRepository, UserRepository userRepository) {
         this.parkingLotRepository = parkingLotRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -33,13 +40,17 @@ public class ParkingLotService {
      */
     @Transactional
     public ParkingLotResponse createParkingLot(CreateParkingLotRequest request) {
+        User operator = userRepository.findById(request.operatorId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Operator " + request.operatorId() + " was not found"
+                ));
+        if (operator.getRole() != User.Role.OPERATOR) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "Only operators can create parking lots");
+        }
+
         String name = request.name().strip();
         String location = request.location().strip();
-        if (parkingLotRepository.existsByNameAndAddressAndStatus(
-                name,
-                location,
-                ParkingLot.Status.ACTIVE
-        )) {
+        if (parkingLotRepository.existsByNameAndAddressAndStatus(name, location, ParkingLot.Status.ACTIVE)) {
             throw new ParkingLotAlreadyExistsException();
         }
 
@@ -47,6 +58,7 @@ public class ParkingLotService {
         parkingLot.setName(name);
         parkingLot.setLocation(location);
         parkingLot.setCapacity(request.capacity());
+        operator.addParkingLot(parkingLot);
 
         ParkingLot savedParkingLot = parkingLotRepository.save(parkingLot);
         return new ParkingLotResponse(
