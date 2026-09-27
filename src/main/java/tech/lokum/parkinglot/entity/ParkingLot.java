@@ -7,12 +7,14 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Represents a parking lot owned by an operator.
  * Contains multiple parking spots.
  * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
+ * method deactivateSpot(ParkingSpot) requires service level validation that the spot is not active/occupied
  * out of service while preserving reservation history and FK relationships.
  */
 @Entity
@@ -66,6 +68,12 @@ public class ParkingLot {
     public void setSpots(Set<ParkingSpot> spots) { this.spots = spots; }
 
     public void addSpot(ParkingSpot spot) {
+        Objects.requireNonNull(spot, "spot must not be null");
+        if (spot.getParkingLot() != null && spot.getParkingLot() != this) {
+            throw new IllegalStateException(
+                    "Spot is already assigned to a different parking lot (id="
+                            + spot.getParkingLot().getId() + ")");
+        }
         spots.add(spot);
         spot.setParkingLot(this);
     }

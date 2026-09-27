@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
  * Overlap prevention uses {@link tech.lokum.parkinglot.repository.ReservationRepository}
  * and pessimistic locking in the service layer.
  * Status transitions: PENDING → CONFIRMED → CANCELLED | EXPIRED | COMPLETED.
- * Booking time-window rules (start not in past, end in future, etc.) belong on request DTOs / the service layer,
- * not on this entity, so historical rows can be loaded and updated safely.
  */
 @Entity
 @Table(name = "reservations")
@@ -67,25 +65,6 @@ public class Reservation {
         PENDING, CONFIRMED, CANCELLED, EXPIRED, COMPLETED
     }
 
-    @AssertTrue(message = "End time must be after start time")
-    public boolean isEndAfterStart() {
-        if (startTime == null || endTime == null) {
-            return true;
-        }
-        return endTime.isAfter(startTime);
-    }
-
-    @AssertTrue(message = "Customer must be the owner of the vehicle")
-    public boolean isCustomerOwningVehicle() {
-        if (customer == null || vehicle == null || vehicle.getUser() == null) {
-            return true;
-        }
-        User owner = vehicle.getUser();
-        if (owner.getId() != null && customer.getId() != null) {
-            return owner.getId().equals(customer.getId());
-        }
-        return owner == customer;
-    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

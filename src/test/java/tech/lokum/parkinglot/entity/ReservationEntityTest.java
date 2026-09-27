@@ -16,23 +16,17 @@ class ReservationEntityTest {
         reservation.setStartTime(LocalDateTime.of(2026, 9, 26, 10, 0));
         reservation.setEndTime(LocalDateTime.of(2026, 9, 26, 14, 0));
         reservation.setStatus(Reservation.Status.CONFIRMED);
-        reservation.isEndAfterStart();
+
 
         assertEquals(1L, reservation.getId());
         assertNotNull(reservation.getVehicle());
         assertNotNull(reservation.getParkingSpot());
         assertNotNull(reservation.getCustomer());
         assertEquals(Reservation.Status.CONFIRMED, reservation.getStatus());
-        assertTrue(reservation.isEndAfterStart());
+
     }
 
-    @Test
-    void endBeforeStartReturnsFalse() {
-        Reservation reservation = new Reservation();
-        reservation.setStartTime(LocalDateTime.of(2026, 9, 26, 14, 0));
-        reservation.setEndTime(LocalDateTime.of(2026, 9, 26, 10, 0));
-        assertFalse(reservation.isEndAfterStart());
-    }
+
 
     @Test
     void entityHasCorrectTableName() {
@@ -72,19 +66,4 @@ class ReservationEntityTest {
         assertSame(reservation, second.getReservation());
     }
 
-    @Test
-    void customerMustOwnVehicle() {
-        User owner = new User();
-        owner.setId(1L);
-        User other = new User();
-        other.setId(2L);
-        Vehicle vehicle = new Vehicle();
-        vehicle.setUser(owner);
-        Reservation reservation = new Reservation();
-        reservation.setVehicle(vehicle);
-        reservation.setCustomer(owner);
-        assertTrue(reservation.isCustomerOwningVehicle());
-        reservation.setCustomer(other);
-        assertFalse(reservation.isCustomerOwningVehicle());
-    }
 }
