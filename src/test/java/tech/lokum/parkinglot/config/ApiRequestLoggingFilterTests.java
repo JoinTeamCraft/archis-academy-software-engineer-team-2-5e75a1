@@ -73,6 +73,19 @@ class ApiRequestLoggingFilterTests {
         assertNull(MDC.get("requestId"));
     }
 
+    @Test
+    void handlesRequestUriShorterThanContextPath() throws Exception {
+        ApiRequestLoggingFilter filter = new ApiRequestLoggingFilter();
+        MockHttpServletRequest request = apiRequest();
+        request.setContextPath("/a-long-context-path");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, (servletRequest, servletResponse) ->
+                ((MockHttpServletResponse) servletResponse).setStatus(200));
+
+        assertNotNull(response.getHeader("X-Request-Id"));
+    }
+
     private MockHttpServletRequest apiRequest() {
         return new MockHttpServletRequest("GET", "/api/test");
     }

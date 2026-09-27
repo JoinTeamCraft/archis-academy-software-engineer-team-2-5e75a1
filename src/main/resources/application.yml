@@ -23,7 +23,7 @@ logging:
     console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n%wEx"
     file: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n%wEx"
   file:
-    name: ${LOG_FILE:logs/parking-lot.log}
+    name: ${LOG_FILE:}
   logback:
     rollingpolicy:
       file-name-pattern: ${LOG_FILE:logs/parking-lot}.%d{yyyy-MM-dd}.%i.log.gz

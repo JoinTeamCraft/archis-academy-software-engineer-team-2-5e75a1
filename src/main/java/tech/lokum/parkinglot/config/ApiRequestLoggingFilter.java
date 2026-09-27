@@ -26,7 +26,7 @@ public class ApiRequestLoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI().substring(request.getContextPath().length());
+        String path = getPathWithinApplication(request);
         String lowerCasePath = path.toLowerCase(Locale.ROOT);
         return path.equals("/actuator") || path.startsWith("/actuator/")
                 || path.equals("/swagger-ui.html") || path.startsWith("/swagger-ui/")
@@ -56,7 +56,7 @@ public class ApiRequestLoggingFilter extends OncePerRequestFilter {
         } finally {
             try {
                 Object routePattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-                String route = routePattern instanceof String pattern ? pattern : "unmatched";
+                String route = routePattern instanceof String pattern ? pattern : request.getRequestURI();
                 long durationMillis = (System.nanoTime() - startTime) / 1_000_000;
                 int status = response.getStatus();
 
@@ -88,5 +88,17 @@ public class ApiRequestLoggingFilter extends OncePerRequestFilter {
             }
         }
         return UUID.randomUUID().toString();
+    }
+
+    private String getPathWithinApplication(HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (requestUri == null || requestUri.isEmpty()) {
+            return "";
+        }
+        if (contextPath != null && !contextPath.isEmpty() && requestUri.startsWith(contextPath)) {
+            return requestUri.substring(contextPath.length());
+        }
+        return requestUri;
     }
 }
