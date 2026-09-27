@@ -18,6 +18,15 @@ spring:
 server:
   port: ${PORT:8080}
 
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n%wEx"
+  level:
+    root: INFO
+    tech.lokum.parkinglot: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+
 management:
   endpoints:
     web:
