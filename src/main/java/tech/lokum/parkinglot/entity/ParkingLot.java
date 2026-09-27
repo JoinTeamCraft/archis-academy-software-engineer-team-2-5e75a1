@@ -16,15 +16,22 @@ import java.util.Set;
  * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
  * method deactivateSpot(ParkingSpot) requires service level validation that the spot is not active/occupied
  * out of service while preserving reservation history and FK relationships.
+ *
+ * <p><strong>Invariant:</strong> every {@code ParkingLot} must belong to an {@link User operator}.
+ * The {@code operator_id} column is {@code NOT NULL} in the database (see V1 migration) and
+ * {@code @JoinColumn(nullable = false)} is declared on the field. {@link #setOperator(User)}
+ * enforces non-null at the Java level as well, so callers receive an immediate
+ * {@link NullPointerException} rather than a cryptic database error. Use
+ * {@link User#addParkingLot(ParkingLot)} to set both sides of the bidirectional association.
+ *
+ * <p>Uniqueness of (name, address) is enforced only among ACTIVE lots. Since JPA/Hibernate's
+ * {@code @UniqueConstraint} cannot express a partial/filtered index, that constraint is created
+ * directly in the database migration (see {@code V2__parking_lot_partial_unique_index.sql}) rather
+ * than declared here. {@link #UNIQUE_NAME_ADDRESS_CONSTRAINT} still names that DB-level index so
+ * {@code GlobalExceptionHandler} can recognize the violation and map it to a 409.
  */
 @Entity
-@Table(
-        name = "parking_lots",
-        uniqueConstraints = @UniqueConstraint(
-                name = ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT,
-                columnNames = {"name", "address"}
-        )
-)
+@Table(name = "parking_lots")
 public class ParkingLot {
 
     public static final String UNIQUE_NAME_ADDRESS_CONSTRAINT = "uk_parking_lot_name_address";
@@ -76,7 +83,18 @@ public class ParkingLot {
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
     public User getOperator() { return operator; }
-    public void setOperator(User operator) { this.operator = operator; }
+
+    /**
+     * Sets the owning operator of this parking lot.
+     * Prefer {@link User#addParkingLot(ParkingLot)} to keep both sides of the
+     * bidirectional association in sync.
+     *
+     * @param operator the owning operator; must not be {@code null}
+     * @throws NullPointerException if {@code operator} is {@code null}
+     */
+    public void setOperator(User operator) {
+        this.operator = Objects.requireNonNull(operator, "operator must not be null");
+    }
     public Set<ParkingSpot> getSpots() { return spots; }
     public void setSpots(Set<ParkingSpot> spots) { this.spots = spots; }
 

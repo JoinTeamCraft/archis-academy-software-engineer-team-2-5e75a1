@@ -89,7 +89,9 @@ class ParkingLotControllerTests {
     }
 
     @Test
-    void rejectsCreatingLotWhenMatchingInactiveLotExistsBecauseNameAndLocationMustBeUnique() throws Exception {
+    void allowsCreatingActiveLotWhenOnlyMatchingLotIsInactive() throws Exception {
+        // Uniqueness applies only among ACTIVE lots, so a previously deactivated
+        // lot with the same name/address should not block a brand-new active one.
         User operator = saveOperator("inactive-lot@example.com", User.Role.OPERATOR);
         ParkingLot inactiveLot = new ParkingLot();
         inactiveLot.setName("Inactive Garage");
@@ -104,21 +106,46 @@ class ParkingLotControllerTests {
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
                         .content(createRequest(operator.getId(), "Inactive Garage", "60 Main St", 20)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", containsString("already exists")));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Inactive Garage"))
+                .andExpect(jsonPath("$.location").value("60 Main St"));
 
-        assertEquals(countBeforeCreate, parkingLotRepository.count());
+        assertEquals(countBeforeCreate + 1, parkingLotRepository.count());
     }
 
     @Test
-    void databaseConstraintPreventsDuplicateNameAndLocationRegardlessOfStatus() {
+    void allowsMultipleInactiveLotsWithSameNameAndAddress() {
+        // Two historical/inactive rows with the same name+address must coexist,
+        // since the unique index only covers status = 'ACTIVE'.
+        User operator = saveOperator("multi-inactive-lot@example.com", User.Role.OPERATOR);
+        saveLot(operator, "Retired Garage", "70 Main St", ParkingLot.Status.INACTIVE);
+
+        // Should not throw: no active-scoped conflict, and the DB index doesn't apply here.
+        saveLot(operator, "Retired Garage", "70 Main St", ParkingLot.Status.INACTIVE);
+    }
+
+    /**
+     * Verifies that the DB-level partial unique index (V2 Flyway migration) blocks a second
+     * ACTIVE lot with the same name+address even when the service pre-check is bypassed.
+     *
+     * <p>Disabled in the H2-backed test suite because H2 does not support
+     * {@code CREATE UNIQUE INDEX … WHERE status = 'ACTIVE'} (partial/filtered indexes).
+     * Re-enable this test when running against a real PostgreSQL instance, e.g. via
+     * Testcontainers with {@code @Tag("integration")}.
+     */
+    @org.junit.jupiter.api.Disabled("H2 does not support partial unique indexes (WHERE clause); " +
+            "run against PostgreSQL via Testcontainers to verify the V2 Flyway migration.")
+    @Test
+    void databaseIndexPreventsDuplicateActiveNameAndAddressEvenIfAppCheckIsBypassed() {
+        // Belt-and-suspenders: even if the service-level pre-check were skipped,
+        // the partial unique index must still stop two ACTIVE rows from colliding.
         User operator = saveOperator("constraint-lot@example.com", User.Role.OPERATOR);
-        saveLot(operator, "Constraint Garage", "70 Main St", ParkingLot.Status.INACTIVE);
-        ParkingLot duplicateLot = createLot(operator, "Constraint Garage", "70 Main St", ParkingLot.Status.INACTIVE);
+        saveLot(operator, "Constraint Garage", "80 Main St", ParkingLot.Status.ACTIVE);
+        ParkingLot duplicateActiveLot = createLot(operator, "Constraint Garage", "80 Main St", ParkingLot.Status.ACTIVE);
 
         assertThrows(
                 DataIntegrityViolationException.class,
-                () -> parkingLotRepository.saveAndFlush(duplicateLot)
+                () -> parkingLotRepository.saveAndFlush(duplicateActiveLot)
         );
     }
 
@@ -170,6 +197,36 @@ class ParkingLotControllerTests {
                 .andExpect(jsonPath("$.message", containsString("operatorId: must be greater than 0")));
     }
 
+    // -------------------------------------------------------------------------
+    // Operator-is-mandatory invariant – integration layer
+    // -------------------------------------------------------------------------
+
+    @Test
+    void setOperatorToNullThrowsImmediatelyBeforeAnyDatabaseCall() {
+        // The Java-level null-guard on ParkingLot#setOperator must fire before
+        // the entity reaches the persistence layer, giving callers a clear message.
+        ParkingLot lot = new ParkingLot();
+        NullPointerException ex = assertThrows(
+                NullPointerException.class,
+                () -> lot.setOperator(null)
+        );
+        assertEquals("operator must not be null", ex.getMessage());
+    }
+
+    @Test
+    void publishesCreateEndpointInOpenApiDocumentation() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.summary").value("Create a parking lot"))
+                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['201']").exists())
+                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['400']").exists())
+                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['409']").exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
     private User saveOperator(String email, User.Role role) {
         User operator = new User();
         operator.setName("Test User");
@@ -183,14 +240,5 @@ class ParkingLotControllerTests {
         return "{\"operatorId\":" + operatorId + ",\"name\":\"" + name
                 + "\",\"location\":\"" + location + "\",\"capacity\":" + capacity + "}";
     }
-
-    @Test
-    void publishesCreateEndpointInOpenApiDocumentation() throws Exception {
-        mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.summary").value("Create a parking lot"))
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['201']").exists())
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['400']").exists())
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['409']").exists());
-    }
 }
+
