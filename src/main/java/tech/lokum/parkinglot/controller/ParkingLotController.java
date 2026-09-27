@@ -47,7 +47,8 @@ public class ParkingLotController {
      */
     @Operation(
             summary = "Create a parking lot",
-            description = "Creates a parking lot with its name, location, and total capacity."
+            description = "Creates a parking lot with its name, location, and total capacity. "
+                    + "Operator ownership is not assigned by this endpoint."
     )
     @ApiResponse(
             responseCode = "201",

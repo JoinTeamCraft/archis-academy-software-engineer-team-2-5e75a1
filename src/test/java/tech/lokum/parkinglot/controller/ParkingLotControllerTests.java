@@ -12,6 +12,7 @@ import tech.lokum.parkinglot.repository.ParkingLotRepository;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,6 +43,11 @@ class ParkingLotControllerTests {
                 .andExpect(jsonPath("$.location").value("123 Main St"))
                 .andExpect(jsonPath("$.capacity").value(120));
         assertEquals(countBefore + 1, parkingLotRepository.count());
+        ParkingLot createdLot = parkingLotRepository.findAll().stream()
+                .filter(lot -> "Central Garage".equals(lot.getName()))
+                .findFirst()
+                .orElseThrow();
+        assertNull(createdLot.getOperator());
     }
 
     @Test

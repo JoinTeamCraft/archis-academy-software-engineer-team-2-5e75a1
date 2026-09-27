@@ -11,7 +11,9 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represents a parking lot owned by an operator.
+ * Represents a parking lot that may be awaiting operator assignment.
+ * Operator ownership is optional because the create-lot API does not currently include
+ * operator identity or authentication context.
  * Contains multiple parking spots.
  * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
  * method deactivateSpot(ParkingSpot) requires service level validation that the spot is not active/occupied
@@ -45,7 +47,7 @@ public class ParkingLot {
     private Status status = Status.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "operator_id", updatable = false)
+    @JoinColumn(name = "operator_id", nullable = true, updatable = false)
     @JsonIgnore
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private User operator;
