@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
                     .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                     .collect(Collectors.joining("; "));
         }
-        return errorResponse(HttpStatus.BAD_REQUEST, message, request);
+        return errorResponse(HttpStatus.UNPROCESSABLE_ENTITY, message, request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -81,10 +81,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         HttpStatus resolvedStatus = HttpStatus.resolve(status.value());
-        String reasonPhrase = status.toString();
-        if (resolvedStatus != null) {
-            reasonPhrase = resolvedStatus.getReasonPhrase();
-        }
+        String reasonPhrase = resolvedStatus != null ? resolvedStatus.getReasonPhrase() : "";
         String errorMessage = message;
         if (errorMessage == null || errorMessage.isBlank()) {
             errorMessage = reasonPhrase;
