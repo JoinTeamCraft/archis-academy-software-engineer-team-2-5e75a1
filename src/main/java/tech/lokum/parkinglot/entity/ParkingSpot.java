@@ -1,0 +1,72 @@
+package tech.lokum.parkinglot.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Represents a single parking spot within a parking lot.
+ * Each spot has a type and an availability status.
+ * {@link SpotStatus#OCCUPIED} / {@link SpotStatus#AVAILABLE} are operator-facing;
+ * time-window availability is derived from {@link Reservation} records in the service layer.
+ */
+@Entity
+@Table(name = "parking_spots", uniqueConstraints = @UniqueConstraint(columnNames = {"lot_id", "spot_number"}))
+public class ParkingSpot {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lot_id", nullable = false, updatable = false)
+    @OnDelete(action = OnDeleteAction.RESTRICT)
+    private ParkingLot parkingLot;
+
+    @Column(name = "spot_number", nullable = false)
+    private String spotNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SpotType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SpotStatus status = SpotStatus.AVAILABLE;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "parkingSpot", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    private Set<Reservation> reservations = new HashSet<>();
+
+    public enum SpotType {
+        CAR, MOTORBIKE, TRUCK, EV
+    }
+
+    public enum SpotStatus {
+        AVAILABLE, OCCUPIED, MAINTENANCE
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public ParkingLot getParkingLot() { return parkingLot; }
+    public void setParkingLot(ParkingLot parkingLot) { this.parkingLot = parkingLot; }
+    public String getSpotNumber() { return spotNumber; }
+    public void setSpotNumber(String spotNumber) { this.spotNumber = spotNumber; }
+    public SpotType getType() { return type; }
+    public void setType(SpotType type) { this.type = type; }
+    public SpotStatus getStatus() { return status; }
+    public void setStatus(SpotStatus status) { this.status = status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Set<Reservation> getReservations() { return reservations; }
+    public void setReservations(Set<Reservation> reservations) { this.reservations = reservations; }
+}
