@@ -21,9 +21,6 @@ server:
 logging:
   pattern:
     console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n%wEx"
-    file: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n%wEx"
-  file:
-    name: ${LOG_FILE:}
   level:
     root: INFO
     tech.lokum.parkinglot: INFO
