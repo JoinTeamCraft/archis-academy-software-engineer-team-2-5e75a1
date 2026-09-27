@@ -40,23 +40,23 @@ class GlobalExceptionHandlerTests {
     }
 
     @Test
-    void mapsCustomValidationExceptionToUnprocessableEntity() throws Exception {
+    void mapsCustomValidationExceptionToBadRequest() throws Exception {
         mockMvc.perform(get("/test/invalid"))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.status").value(422))
-                .andExpect(jsonPath("$.error").value("Unprocessable Content"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Start time must be before end time"))
                 .andExpect(jsonPath("$.path").value("/test/invalid"));
     }
 
     @Test
-    void mapsBeanValidationErrorsToUnprocessableEntity() throws Exception {
+    void mapsBeanValidationErrorsToBadRequest() throws Exception {
         mockMvc.perform(post("/test/validated")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\" \"}"))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.status").value(422))
-                .andExpect(jsonPath("$.error").value("Unprocessable Content"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("name: must not be blank"))
                 .andExpect(jsonPath("$.path").value("/test/validated"));
     }

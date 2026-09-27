@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
                     .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                     .collect(Collectors.joining("; "));
         }
-        return errorResponse(HttpStatus.UNPROCESSABLE_ENTITY, message, request);
+        return errorResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
     @ExceptionHandler(Exception.class)
