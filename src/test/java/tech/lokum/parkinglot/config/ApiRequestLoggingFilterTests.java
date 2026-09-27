@@ -29,7 +29,7 @@ class ApiRequestLoggingFilterTests {
     void usesRequestIdInMdcAndResponseAndRestoresPreviousContext() throws Exception {
         ApiRequestLoggingFilter filter = new ApiRequestLoggingFilter();
         MockHttpServletRequest request = apiRequest();
-        request.addHeader("X-Request-Id", "request-123");
+        request.addHeader("X-Request-Id", "  request-123  ");
         MockHttpServletResponse response = new MockHttpServletResponse();
         MDC.put("requestId", "previous-request");
 

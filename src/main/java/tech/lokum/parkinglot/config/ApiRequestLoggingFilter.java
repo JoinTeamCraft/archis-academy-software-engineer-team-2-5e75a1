@@ -81,8 +81,11 @@ public class ApiRequestLoggingFilter extends OncePerRequestFilter {
     }
 
     private String resolveRequestId(String requestId) {
-        if (requestId != null && SAFE_REQUEST_ID.matcher(requestId).matches()) {
-            return requestId;
+        if (requestId != null) {
+            String normalizedRequestId = requestId.strip();
+            if (SAFE_REQUEST_ID.matcher(normalizedRequestId).matches()) {
+                return normalizedRequestId;
+            }
         }
         return UUID.randomUUID().toString();
     }

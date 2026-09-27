@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         logger.error("Unhandled request: method={}, exception={}",
-                request.getMethod(), exception.getClass().getSimpleName());
+                request.getMethod(), exception.getClass().getSimpleName(), exception);
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, UNEXPECTED_ERROR_MESSAGE, request);
     }
 

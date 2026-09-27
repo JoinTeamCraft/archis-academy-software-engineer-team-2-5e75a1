@@ -32,7 +32,8 @@ logging:
       total-size-cap: 1GB
   level:
     root: INFO
-    tech.lokum.parkinglot: DEBUG
+    tech.lokum.parkinglot: INFO
+    org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
 
 management:
