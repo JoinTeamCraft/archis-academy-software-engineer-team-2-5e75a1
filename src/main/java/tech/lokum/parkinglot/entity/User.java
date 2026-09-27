@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -83,7 +84,8 @@ public class User {
      * Attaches a new, unpersisted lot to this operator. Does not reassign lots that already have an operator.
      */
     public void addParkingLot(ParkingLot lot) {
-        if (lot.getOperator() != null) {
+        Objects.requireNonNull(lot, "lot must not be null");
+        if (lot.getOperator() != null && lot.getOperator() != this) {
             throw new IllegalStateException("ParkingLot already has an operator");
         }
         lot.setOperator(this);

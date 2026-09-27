@@ -49,11 +49,15 @@ class UserEntityTest {
     }
 
     @Test
-    void addParkingLotThrowsWhenLotAlreadyHasSameOperator() {
+    void addParkingLotDoesNotThrowWhenLotAlreadyHasSameOperator() {
         User user = new User();
         ParkingLot lot = new ParkingLot();
         lot.setOperator(user);
-        assertThrows(IllegalStateException.class, () -> user.addParkingLot(lot));
+
+        assertDoesNotThrow(() -> user.addParkingLot(lot));
+
+        assertTrue(user.getParkingLots().contains(lot));
+        assertSame(user, lot.getOperator());
     }
 
     @Test
