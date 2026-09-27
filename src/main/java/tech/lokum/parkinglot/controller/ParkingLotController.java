@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -50,23 +49,21 @@ public class ParkingLotController {
             summary = "Create a parking lot",
             description = "Creates a parking lot with its name, location, and total capacity."
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Parking lot created",
-                    content = @Content(schema = @Schema(implementation = ParkingLotResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "The request body is malformed or contains invalid fields",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "An active parking lot already exists with this name and location",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
+    @ApiResponse(
+            responseCode = "201",
+            description = "Parking lot created",
+            content = @Content(schema = @Schema(implementation = ParkingLotResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "The request body is malformed or contains invalid fields",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = "An active parking lot already exists with this name and location",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ParkingLotResponse createParkingLot(@Valid @RequestBody CreateParkingLotRequest request) {
