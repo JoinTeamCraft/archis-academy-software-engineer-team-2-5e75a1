@@ -71,7 +71,8 @@ public class GlobalExceptionHandler {
             Exception exception,
             HttpServletRequest request
     ) {
-        logger.error("Unhandled exception while processing {}", request.getRequestURI(), exception);
+        logger.error("Unhandled request: method={}, exception={}",
+                request.getMethod(), exception.getClass().getSimpleName());
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, UNEXPECTED_ERROR_MESSAGE, request);
     }
 
