@@ -18,7 +18,13 @@ import java.util.Set;
  * out of service while preserving reservation history and FK relationships.
  */
 @Entity
-@Table(name = "parking_lots")
+@Table(
+        name = "parking_lots",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_parking_lot_name_address_status",
+                columnNames = {"name", "address", "status"}
+        )
+)
 public class ParkingLot {
 
     @Id
@@ -31,12 +37,15 @@ public class ParkingLot {
     @Column(nullable = false)
     private String address;
 
+    @Column(nullable = false)
+    private int capacity;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "operator_id", nullable = false, updatable = false)
+    @JoinColumn(name = "operator_id", updatable = false)
     @JsonIgnore
     @OnDelete(action = OnDeleteAction.RESTRICT)
     private User operator;
@@ -58,8 +67,10 @@ public class ParkingLot {
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public String getLocation() { return address; }
+    public void setLocation(String location) { this.address = location; }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
     public User getOperator() { return operator; }

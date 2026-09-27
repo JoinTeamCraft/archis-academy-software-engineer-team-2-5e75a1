@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.sql.SQLException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,6 +50,16 @@ class GlobalExceptionHandlerTests {
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Start time must be before end time"))
                 .andExpect(jsonPath("$.path").value("/test/invalid"));
+    }
+
+    @Test
+    void mapsActiveParkingLotUniqueConstraintToConflict() throws Exception {
+        mockMvc.perform(get("/test/duplicate"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message")
+                        .value("An active parking lot already exists with this name and location"))
+                .andExpect(jsonPath("$.path").value("/test/duplicate"));
     }
 
     @Test
@@ -96,8 +109,19 @@ class GlobalExceptionHandlerTests {
             throw new ValidationException("Start time must be before end time");
         }
 
+        @GetMapping("/test/duplicate")
+        void duplicate() {
+            var constraintViolation = new org.hibernate.exception.ConstraintViolationException(
+                    "Duplicate parking lot",
+                    new SQLException("Unique constraint violation"),
+                    "uk_parking_lot_name_address_status"
+            );
+            throw new DataIntegrityViolationException("Duplicate parking lot", constraintViolation);
+        }
+
         @PostMapping("/test/validated")
         void validated(@Valid @RequestBody ValidatedRequest request) {
+            // Intentionally empty: request binding validates the body before invoking this method.
         }
 
         @GetMapping("/test/unexpected")

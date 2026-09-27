@@ -10,13 +10,15 @@ class ParkingLotEntityTest {
         ParkingLot lot = new ParkingLot();
         lot.setId(1L);
         lot.setName("Downtown Lot");
-        lot.setAddress("123 Main St");
+        lot.setLocation("123 Main St");
+        lot.setCapacity(500);
         lot.setStatus(ParkingLot.Status.ACTIVE);
         lot.setOperator(new User());
 
         assertEquals(1L, lot.getId());
         assertEquals("Downtown Lot", lot.getName());
-        assertEquals("123 Main St", lot.getAddress());
+        assertEquals("123 Main St", lot.getLocation());
+        assertEquals(500, lot.getCapacity());
         assertEquals(ParkingLot.Status.ACTIVE, lot.getStatus());
         assertNotNull(lot.getOperator());
     }

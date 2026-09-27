@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +24,30 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred";
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(
-            ResourceNotFoundException exception,
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(
+            BusinessException exception,
             HttpServletRequest request
     ) {
-        return errorResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+        return errorResponse(exception.getStatus(), exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            DataIntegrityViolationException exception,
+            HttpServletRequest request
+    ) {
+        if (isParkingLotDuplicate(exception)) {
+            return errorResponse(
+                    HttpStatus.CONFLICT,
+                    "An active parking lot already exists with this name and location",
+                    request
+            );
+        }
+
+        logger.error("Database integrity violation: method={}, uri={}",
+                request.getMethod(), request.getRequestURI(), exception);
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, UNEXPECTED_ERROR_MESSAGE, request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -48,7 +67,6 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-            ValidationException.class,
             MethodArgumentNotValidException.class,
             ConstraintViolationException.class
     })
@@ -99,5 +117,17 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    private boolean isParkingLotDuplicate(Throwable exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation
+                    && "uk_parking_lot_name_address_status".equals(violation.getConstraintName())) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 }
