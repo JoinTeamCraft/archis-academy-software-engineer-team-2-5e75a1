@@ -7,6 +7,7 @@ import tech.lokum.parkinglot.dto.ParkingLotResponse;
 import tech.lokum.parkinglot.entity.ParkingLot;
 import tech.lokum.parkinglot.entity.User;
 import tech.lokum.parkinglot.exception.BusinessException;
+import tech.lokum.parkinglot.exception.ForbiddenOperationException;
 import tech.lokum.parkinglot.exception.ParkingLotAlreadyExistsException;
 import tech.lokum.parkinglot.exception.ResourceNotFoundException;
 import tech.lokum.parkinglot.repository.ParkingLotRepository;
@@ -45,7 +46,8 @@ public class ParkingLotService {
                         "Operator " + request.operatorId() + " was not found"
                 ));
         if (operator.getRole() != User.Role.OPERATOR) {
-            throw new BusinessException(HttpStatus.FORBIDDEN, "Only operators can create parking lots");
+            throw new ForbiddenOperationException("Only operators can create parking lots"
+            );
         }
 
         String name = request.name().strip();
@@ -56,7 +58,7 @@ public class ParkingLotService {
 
         ParkingLot parkingLot = new ParkingLot();
         parkingLot.setName(name);
-        parkingLot.setLocation(location);
+        parkingLot.setAddress(location);
         parkingLot.setCapacity(request.capacity());
         operator.addParkingLot(parkingLot);
 
@@ -64,7 +66,7 @@ public class ParkingLotService {
         return new ParkingLotResponse(
                 savedParkingLot.getId(),
                 savedParkingLot.getName(),
-                savedParkingLot.getLocation(),
+                savedParkingLot.getAddress(),
                 savedParkingLot.getCapacity()
         );
     }

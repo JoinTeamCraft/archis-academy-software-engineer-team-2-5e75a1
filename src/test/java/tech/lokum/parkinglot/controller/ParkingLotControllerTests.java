@@ -259,7 +259,7 @@ class ParkingLotControllerTests {
         long matchingActiveLots = parkingLotRepository.findAll()
                 .stream()
                 .filter(lot -> "Inactive Garage".equals(lot.getName()))
-                .filter(lot -> "60 Main St".equals(lot.getLocation()))
+                .filter(lot -> "60 Main St".equals(lot.getAddress()))
                 .filter(lot -> lot.getStatus() == ParkingLot.Status.ACTIVE)
                 .count();
 
@@ -291,7 +291,7 @@ class ParkingLotControllerTests {
         long inactiveCount = parkingLotRepository.findAll()
                 .stream()
                 .filter(lot -> "Retired Garage".equals(lot.getName()))
-                .filter(lot -> "70 Main St".equals(lot.getLocation()))
+                .filter(lot -> "70 Main St".equals(lot.getAddress()))
                 .filter(lot -> lot.getStatus() == ParkingLot.Status.INACTIVE)
                 .count();
 
@@ -325,7 +325,7 @@ class ParkingLotControllerTests {
         long matchingLots = parkingLotRepository.findAll()
                 .stream()
                 .filter(lot -> "Mixed Status Garage".equals(lot.getName()))
-                .filter(lot -> "75 Main St".equals(lot.getLocation()))
+                .filter(lot -> "75 Main St".equals(lot.getAddress()))
                 .count();
 
         assertEquals(2, matchingLots);
@@ -496,7 +496,7 @@ class ParkingLotControllerTests {
         ParkingLot lot = new ParkingLot();
 
         lot.setName(name);
-        lot.setLocation(location);
+        lot.setAddress(location);
         lot.setCapacity(20);
         lot.setStatus(status);
 
