@@ -34,6 +34,7 @@ class PaymentRepositoryTest {
 
         Payment payment = createPayment(reservation);
         paymentRepository.saveAndFlush(payment);
+        reservationRepository.saveAndFlush(reservation);
 
         Optional<Payment> found = paymentRepository.findByReservation(reservation);
         assertThat(found).isPresent();
@@ -56,7 +57,7 @@ class PaymentRepositoryTest {
         paid.setStatus(Payment.Status.PAID);
         Payment pending = createPayment(reservation2);
         pending.setStatus(Payment.Status.PENDING);
-        paymentRepository.saveAll(List.of(paid, pending));
+        paymentRepository.saveAllAndFlush(List.of(paid, pending));
 
         List<Payment> paidPayments = paymentRepository.findByStatus(Payment.Status.PAID);
         assertThat(paidPayments).hasSize(1);
