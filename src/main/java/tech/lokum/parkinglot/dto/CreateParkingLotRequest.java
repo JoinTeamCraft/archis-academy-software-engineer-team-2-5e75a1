@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Positive;
  * Validated request body for {@code POST /api/parking-lots}.
  *
  * @param name required, non-blank parking lot name
- * @param location required, non-blank parking lot location
+ * @param address required, non-blank parking lot location
  * @param capacity required positive maximum vehicle capacity
  * @param operatorId required ID of the existing OPERATOR user who owns the parking lot;
  *                   administrators creating a lot for an operator must supply that operator's ID
@@ -23,8 +23,8 @@ public record CreateParkingLotRequest(
         @NotNull @Positive Long operatorId,
         @Schema(description = "Parking lot name", example = "Central Garage")
         @NotBlank String name,
-        @Schema(description = "Street address or other location description", example = "123 Main St")
-        @NotBlank String location,
+        @Schema(description = "Street address or other address description", example = "123 Main St")
+        @NotBlank String address,
         @Schema(description = "Maximum number of vehicles", example = "120", minimum = "1")
         @Positive int capacity
 ) {

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @param id generated parking lot identifier
  * @param name parking lot name
- * @param location parking lot location
+ * @param address parking lot location
  * @param capacity maximum number of vehicles
  * @author Parking Lot API team
  * @version 1.0
@@ -19,8 +19,8 @@ public record ParkingLotResponse(
         Long id,
         @Schema(description = "Parking lot name", example = "Central Garage")
         String name,
-        @Schema(description = "Street address or other location description", example = "123 Main St")
-        String location,
+        @Schema(description = "Street address ", example = "123 Main St")
+        String address,
         @Schema(description = "Maximum number of vehicles", example = "120")
         int capacity
 ) {

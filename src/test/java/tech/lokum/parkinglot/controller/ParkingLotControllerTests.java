@@ -60,7 +60,7 @@ class ParkingLotControllerTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("Central Garage"))
-                .andExpect(jsonPath("$.location").value("123 Main St"))
+                .andExpect(jsonPath("$.address").value("123 Main St"))
                 .andExpect(jsonPath("$.capacity").value(120));
 
         assertEquals(
@@ -108,7 +108,7 @@ class ParkingLotControllerTests {
                         )))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", containsString("name:")))
-                .andExpect(jsonPath("$.message", containsString("location:")))
+                .andExpect(jsonPath("$.message", containsString("address:")))
                 .andExpect(jsonPath("$.message", containsString("capacity:")));
 
         assertEquals(
@@ -125,7 +125,7 @@ class ParkingLotControllerTests {
                         .content("""
                                 {
                                     "name": "Missing Operator",
-                                    "location": "92 Main St",
+                                    "address": "92 Main St",
                                     "capacity": 10
                                 }
                                 """))
@@ -178,7 +178,7 @@ class ParkingLotControllerTests {
                         )))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message")
-                        .value("A parking lot already exists with this name and location"));
+                        .value("A parking lot already exists with this name and address"));
 
         assertEquals(
                 countAfterFirstCreate,
@@ -214,7 +214,7 @@ class ParkingLotControllerTests {
                         )))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message")
-                        .value("A parking lot already exists with this name and location"));
+                        .value("A parking lot already exists with this name and address"));
 
         assertEquals(
                 countBefore,
@@ -248,7 +248,7 @@ class ParkingLotControllerTests {
                         )))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Inactive Garage"))
-                .andExpect(jsonPath("$.location").value("60 Main St"))
+                .andExpect(jsonPath("$.address").value("60 Main St"))
                 .andExpect(jsonPath("$.capacity").value(20));
 
         assertEquals(
@@ -489,14 +489,14 @@ class ParkingLotControllerTests {
     private ParkingLot createLot(
             User operator,
             String name,
-            String location,
+            String address,
             ParkingLot.Status status
     ) {
 
         ParkingLot lot = new ParkingLot();
 
         lot.setName(name);
-        lot.setAddress(location);
+        lot.setAddress(address);
         lot.setCapacity(20);
         lot.setStatus(status);
 
@@ -508,7 +508,7 @@ class ParkingLotControllerTests {
     private void saveLot(
             User operator,
             String name,
-            String location,
+            String address,
             ParkingLot.Status status
     ) {
 
@@ -516,7 +516,7 @@ class ParkingLotControllerTests {
                 createLot(
                         operator,
                         name,
-                        location,
+                        address,
                         status
                 )
         );
@@ -525,7 +525,7 @@ class ParkingLotControllerTests {
     private String createRequest(
             Long operatorId,
             String name,
-            String location,
+            String address,
             int capacity
     ) {
 
@@ -533,13 +533,13 @@ class ParkingLotControllerTests {
                 {
                     "operatorId": %d,
                     "name": "%s",
-                    "location": "%s",
+                    "address": "%s",
                     "capacity": %d
                 }
                 """.formatted(
                 operatorId,
                 name,
-                location,
+                address,
                 capacity
         );
     }

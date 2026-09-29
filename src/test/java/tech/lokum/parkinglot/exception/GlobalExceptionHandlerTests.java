@@ -60,7 +60,7 @@ class GlobalExceptionHandlerTests {
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message")
-                        .value("A parking lot already exists with this name and location"))
+                        .value("A parking lot already exists with this name and address"))
                 .andExpect(jsonPath("$.path").value("/test/duplicate"));
     }
 

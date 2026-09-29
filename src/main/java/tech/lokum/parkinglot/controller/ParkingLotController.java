@@ -38,7 +38,7 @@ public class ParkingLotController {
     /**
      * Creates a parking lot.
      *
-     * <p>Accepts a non-blank name and location and a positive capacity. Returns the persisted
+     * <p>Accepts a non-blank name and address and a positive capacity. Returns the persisted
      * parking lot with its generated identifier.</p>
      *
      * @param request validated parking lot creation details
@@ -47,8 +47,11 @@ public class ParkingLotController {
      */
     @Operation(
             summary = "Create a parking lot",
-            description = "Creates a parking lot for an existing OPERATOR user identified by operatorId. "
-                    + "An administrator creating a lot on an operator's behalf supplies the owning operator's ID."
+            description = """
+                Creates a parking lot for an existing OPERATOR user identified by operatorId.
+                An administrator creating a lot on an operator's behalf supplies the owning
+                operator's ID. The name and address must be unique among active parking lots.
+                """
     )
     @ApiResponse(
             responseCode = "201",
@@ -62,7 +65,7 @@ public class ParkingLotController {
     )
     @ApiResponse(
             responseCode = "409",
-            description = "A parking lot already exists with this name and location",
+            description = "An active parking lot already exists with this name and address",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class))
     )
     @ApiResponse(

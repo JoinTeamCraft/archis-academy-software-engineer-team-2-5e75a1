@@ -51,14 +51,14 @@ public class ParkingLotService {
         }
 
         String name = request.name().strip();
-        String location = request.location().strip();
-        if (parkingLotRepository.existsByNameAndAddressAndStatus(name, location, ParkingLot.Status.ACTIVE)) {
+        String address = request.address().strip();
+        if (parkingLotRepository.existsByNameAndAddressAndStatus(name, address, ParkingLot.Status.ACTIVE)) {
             throw new ParkingLotAlreadyExistsException();
         }
 
         ParkingLot parkingLot = new ParkingLot();
         parkingLot.setName(name);
-        parkingLot.setAddress(location);
+        parkingLot.setAddress(address);
         parkingLot.setCapacity(request.capacity());
         operator.addParkingLot(parkingLot);
 

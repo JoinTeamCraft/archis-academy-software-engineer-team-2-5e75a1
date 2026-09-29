@@ -1,5 +1,4 @@
-﻿-- =============================================================================
--- V2 - Partial unique index on parking_lots (name, address)
+﻿-- V2 - Partial unique index on parking_lots (name, address)
 --      for ACTIVE parking lots only.
 --
 -- A standard UNIQUE constraint cannot express a WHERE clause, so this rule
@@ -14,7 +13,6 @@
 -- Referenced by:
 --   * ParkingLot.ACTIVE_NAME_ADDRESS_UNIQUE_INDEX
 --   * GlobalExceptionHandler#isParkingLotDuplicate
--- =============================================================================
 
 CREATE UNIQUE INDEX uk_parking_lot_active_name_address
     ON parking_lots (name, address)
