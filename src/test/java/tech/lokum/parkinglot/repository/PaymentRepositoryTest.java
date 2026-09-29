@@ -2,7 +2,7 @@ package tech.lokum.parkinglot.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import tech.lokum.parkinglot.entity.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,7 +11,14 @@ import java.util.UUID;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+/**
+ * Unit tests for {@link PaymentRepository}.
+ *
+ * <p>Uses {@code @DataJpaTest} to load only the JPA layer (repositories and entities)
+ * with an embedded H2 database. Each test runs in a transaction that is rolled back
+ * after completion, ensuring no state leaks between tests.
+ */
+@DataJpaTest
 class PaymentRepositoryTest {
 
     @Autowired private PaymentRepository paymentRepository;
@@ -24,10 +31,9 @@ class PaymentRepositoryTest {
     @Test
     void findByReservation_ShouldReturnPayment_WhenExists() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(reservation);
 
         Payment payment = createPayment(reservation);
-        paymentRepository.save(payment);
+        paymentRepository.saveAndFlush(payment);
 
         Optional<Payment> found = paymentRepository.findByReservation(reservation);
         assertThat(found).isPresent();
@@ -37,7 +43,6 @@ class PaymentRepositoryTest {
     @Test
     void findByReservation_ShouldReturnEmpty_WhenNoPayment() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(reservation);
 
         assertThat(paymentRepository.findByReservation(reservation)).isEmpty();
     }
@@ -45,9 +50,7 @@ class PaymentRepositoryTest {
     @Test
     void findByStatus_ShouldReturnPayments_WhenStatusMatches() {
         Reservation reservation1 = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(reservation1);
         Reservation reservation2 = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(reservation2);
 
         Payment paid = createPayment(reservation1);
         paid.setStatus(Payment.Status.PAID);
@@ -63,16 +66,16 @@ class PaymentRepositoryTest {
     private Reservation createReservation(Reservation.Status status) {
         User operator = createUser("Op");
         ParkingLot lot = createParkingLot(operator);
-        parkingLotRepository.save(lot);
+        parkingLotRepository.saveAndFlush(lot);
         ParkingSpot spot = createParkingSpot(lot);
-        parkingSpotRepository.save(spot);
+        parkingSpotRepository.saveAndFlush(spot);
 
         User customer = createUser("Cust");
         Vehicle vehicle = new Vehicle();
         vehicle.setUser(customer);
         vehicle.setLicensePlate("PLT-" + UUID.randomUUID());
         vehicle.setType(Vehicle.VehicleType.CAR);
-        vehicleRepository.save(vehicle);
+        vehicleRepository.saveAndFlush(vehicle);
 
         Reservation reservation = new Reservation();
         reservation.setParkingSpot(spot);
@@ -81,6 +84,7 @@ class PaymentRepositoryTest {
         reservation.setStatus(status);
         reservation.setStartTime(LocalDateTime.now().plusHours(1));
         reservation.setEndTime(LocalDateTime.now().plusHours(2));
+        reservationRepository.saveAndFlush(reservation);
         return reservation;
     }
 

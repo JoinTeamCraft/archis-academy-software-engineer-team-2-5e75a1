@@ -2,15 +2,20 @@ package tech.lokum.parkinglot.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import tech.lokum.parkinglot.entity.*;
 import java.util.List;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+/**
+ * Unit tests for {@link ParkingLotRepository}.
+ *
+ * <p>Uses {@code @DataJpaTest} to load only the JPA layer (repositories and entities)
+ * with an embedded H2 database. Each test runs in a transaction that is rolled back
+ * after completion, ensuring no state leaks between tests.
+ */
+@DataJpaTest
 class ParkingLotRepositoryTest {
 
     @Autowired private ParkingLotRepository parkingLotRepository;

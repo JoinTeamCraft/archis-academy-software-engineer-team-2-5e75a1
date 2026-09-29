@@ -2,14 +2,21 @@ package tech.lokum.parkinglot.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import tech.lokum.parkinglot.entity.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+/**
+ * Unit tests for {@link VehicleRepository}.
+ *
+ * <p>Uses {@code @DataJpaTest} to load only the JPA layer (repositories and entities)
+ * with an embedded H2 database. Each test runs in a transaction that is rolled back
+ * after completion, ensuring no state leaks between tests.
+ */
+@DataJpaTest
 class VehicleRepositoryTest {
 
     @Autowired private VehicleRepository vehicleRepository;
@@ -23,7 +30,7 @@ class VehicleRepositoryTest {
         vehicle.setLicensePlate("PLT-" + UUID.randomUUID());
         vehicle.setType(Vehicle.VehicleType.CAR);
         vehicle.setColor("Red");
-        vehicleRepository.save(vehicle);
+        vehicleRepository.saveAndFlush(vehicle);
 
         Optional<Vehicle> found = vehicleRepository.findByLicensePlate(vehicle.getLicensePlate());
         assertThat(found).isPresent();

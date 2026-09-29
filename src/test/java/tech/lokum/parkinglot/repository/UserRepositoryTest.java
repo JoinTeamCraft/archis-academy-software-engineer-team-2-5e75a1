@@ -2,13 +2,20 @@ package tech.lokum.parkinglot.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import tech.lokum.parkinglot.entity.User;
-import java.util.Optional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import tech.lokum.parkinglot.entity.*;
 import java.util.UUID;
+import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+/**
+ * Unit tests for {@link UserRepository}.
+ *
+ * <p>Uses {@code @DataJpaTest} to load only the JPA layer (repositories and entities)
+ * with an embedded H2 database. Each test runs in a transaction that is rolled back
+ * after completion, ensuring no state leaks between tests.
+ */
+@DataJpaTest
 class UserRepositoryTest {
 
     @Autowired private UserRepository userRepository;
@@ -17,7 +24,7 @@ class UserRepositoryTest {
     void findByEmail_ShouldReturnUser_WhenEmailExists() {
         String email = "user_" + UUID.randomUUID() + "@test.com";
         User user = createUser(email);
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
 
         Optional<User> found = userRepository.findByEmail(email);
         assertThat(found).isPresent();
@@ -33,7 +40,7 @@ class UserRepositoryTest {
     void existsByEmail_ShouldReturnTrue_WhenEmailExists() {
         String email = "user_" + UUID.randomUUID() + "@test.com";
         User user = createUser(email);
-        userRepository.save(user);
+        userRepository.saveAndFlush(user);
 
         assertThat(userRepository.existsByEmail(email)).isTrue();
     }

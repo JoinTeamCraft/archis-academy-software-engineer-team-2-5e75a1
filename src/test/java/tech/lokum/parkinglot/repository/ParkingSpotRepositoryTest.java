@@ -2,13 +2,20 @@ package tech.lokum.parkinglot.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import tech.lokum.parkinglot.entity.*;
 import java.util.List;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+/**
+ * Unit tests for {@link ParkingSpotRepository}.
+ *
+ * <p>Uses {@code @DataJpaTest} to load only the JPA layer (repositories and entities)
+ * with an embedded H2 database. Each test runs in a transaction that is rolled back
+ * after completion, ensuring no state leaks between tests.
+ */
+@DataJpaTest
 class ParkingSpotRepositoryTest {
 
     @Autowired private ParkingSpotRepository parkingSpotRepository;
@@ -19,7 +26,7 @@ class ParkingSpotRepositoryTest {
     void findByParkingLot_ShouldReturnSpots_ForGivenLot() {
         User operator = createOperator();
         ParkingLot lot = createParkingLot(operator);
-        parkingLotRepository.save(lot);
+        parkingLotRepository.saveAndFlush(lot);
 
         ParkingSpot spot1 = createSpot(lot, ParkingSpot.SpotType.CAR, ParkingSpot.SpotStatus.AVAILABLE);
         ParkingSpot spot2 = createSpot(lot, ParkingSpot.SpotType.MOTORBIKE, ParkingSpot.SpotStatus.OCCUPIED);
@@ -33,7 +40,7 @@ class ParkingSpotRepositoryTest {
     void findByParkingLotAndStatus_ShouldReturnFilteredSpots() {
         User operator = createOperator();
         ParkingLot lot = createParkingLot(operator);
-        parkingLotRepository.save(lot);
+        parkingLotRepository.saveAndFlush(lot);
 
         ParkingSpot available = createSpot(lot, ParkingSpot.SpotType.CAR, ParkingSpot.SpotStatus.AVAILABLE);
         ParkingSpot occupied = createSpot(lot, ParkingSpot.SpotType.CAR, ParkingSpot.SpotStatus.OCCUPIED);
@@ -48,7 +55,7 @@ class ParkingSpotRepositoryTest {
     void findByParkingLotAndStatusAndType_ShouldReturnExactMatch() {
         User operator = createOperator();
         ParkingLot lot = createParkingLot(operator);
-        parkingLotRepository.save(lot);
+        parkingLotRepository.saveAndFlush(lot);
 
         ParkingSpot carAvail = createSpot(lot, ParkingSpot.SpotType.CAR, ParkingSpot.SpotStatus.AVAILABLE);
         ParkingSpot motAvail = createSpot(lot, ParkingSpot.SpotType.MOTORBIKE, ParkingSpot.SpotStatus.AVAILABLE);

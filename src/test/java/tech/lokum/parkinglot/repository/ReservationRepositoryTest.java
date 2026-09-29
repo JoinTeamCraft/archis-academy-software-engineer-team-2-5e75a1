@@ -2,16 +2,22 @@ package tech.lokum.parkinglot.repository;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import tech.lokum.parkinglot.entity.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+/**
+ * Unit tests for {@link ReservationRepository}.
+ *
+ * <p>Uses {@code @DataJpaTest} to load only the JPA layer (repositories and entities)
+ * with an embedded H2 database. Each test runs in a transaction that is rolled back
+ * after completion, ensuring no state leaks between tests.
+ */
+@DataJpaTest
 class ReservationRepositoryTest {
 
     @Autowired private ReservationRepository reservationRepository;
@@ -23,7 +29,6 @@ class ReservationRepositoryTest {
     @Test
     void findByParkingSpotAndStatus_ShouldReturnReservations() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(reservation);
 
         List<Reservation> found = reservationRepository.findByParkingSpotAndStatus(
                 reservation.getParkingSpot(), Reservation.Status.CONFIRMED);
@@ -34,7 +39,6 @@ class ReservationRepositoryTest {
     @Test
     void findByVehicleAndStatus_ShouldReturnReservations() {
         Reservation reservation = createReservation(Reservation.Status.PENDING);
-        reservationRepository.save(reservation);
 
         List<Reservation> found = reservationRepository.findByVehicleAndStatus(
                 reservation.getVehicle(), Reservation.Status.PENDING);
@@ -44,7 +48,6 @@ class ReservationRepositoryTest {
     @Test
     void findByCustomerAndStatus_ShouldReturnReservations() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(reservation);
 
         List<Reservation> found = reservationRepository.findByCustomerAndStatus(
                 reservation.getCustomer(), Reservation.Status.CONFIRMED);
@@ -54,7 +57,6 @@ class ReservationRepositoryTest {
     @Test
     void existsOverlappingActiveReservation_ShouldReturnTrue_WhenOverlapExists() {
         Reservation existing = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(existing);
 
         LocalDateTime overlapStart = existing.getStartTime().plusMinutes(30);
         LocalDateTime overlapEnd = existing.getEndTime().plusMinutes(30);
@@ -69,7 +71,6 @@ class ReservationRepositoryTest {
     @Test
     void existsOverlappingActiveReservation_ShouldReturnFalse_WhenNoOverlap() {
         Reservation existing = createReservation(Reservation.Status.CONFIRMED);
-        reservationRepository.save(existing);
 
         LocalDateTime afterEnd = existing.getEndTime().plusHours(1);
         LocalDateTime farEnd = afterEnd.plusHours(1);
@@ -84,7 +85,6 @@ class ReservationRepositoryTest {
     @Test
     void existsOverlappingActiveReservation_ShouldReturnFalse_ForCancelledStatus() {
         Reservation cancelled = createReservation(Reservation.Status.CANCELLED);
-        reservationRepository.save(cancelled);
 
         LocalDateTime withinRange = cancelled.getStartTime().plusMinutes(30);
         LocalDateTime farEnd = cancelled.getEndTime().plusMinutes(30);
@@ -99,16 +99,16 @@ class ReservationRepositoryTest {
     private Reservation createReservation(Reservation.Status status) {
         User operator = createUser("Op");
         ParkingLot lot = createParkingLot(operator);
-        parkingLotRepository.save(lot);
+        parkingLotRepository.saveAndFlush(lot);
         ParkingSpot spot = createParkingSpot(lot);
-        parkingSpotRepository.save(spot);
+        parkingSpotRepository.saveAndFlush(spot);
 
         User customer = createUser("Cust");
         Vehicle vehicle = new Vehicle();
         vehicle.setUser(customer);
         vehicle.setLicensePlate("PLT-" + UUID.randomUUID());
         vehicle.setType(Vehicle.VehicleType.CAR);
-        vehicleRepository.save(vehicle);
+        vehicleRepository.saveAndFlush(vehicle);
 
         Reservation reservation = new Reservation();
         reservation.setParkingSpot(spot);
@@ -117,6 +117,7 @@ class ReservationRepositoryTest {
         reservation.setStatus(status);
         reservation.setStartTime(LocalDateTime.now().plusHours(1));
         reservation.setEndTime(LocalDateTime.now().plusHours(2));
+        reservationRepository.saveAndFlush(reservation);
         return reservation;
     }
 
