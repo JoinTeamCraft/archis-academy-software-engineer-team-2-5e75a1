@@ -49,6 +49,12 @@ class PaymentRepositoryTest {
     }
 
     @Test
+    void reservationId_ShouldBeLong() {
+        Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
+        assertThat(reservation.getId()).isInstanceOf(Long.class);
+    }
+
+    @Test
     void findByStatus_ShouldReturnPayments_WhenStatusMatches() {
         Reservation reservation1 = createReservation(Reservation.Status.CONFIRMED);
         Reservation reservation2 = createReservation(Reservation.Status.CONFIRMED);
