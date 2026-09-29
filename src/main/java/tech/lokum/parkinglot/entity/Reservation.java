@@ -98,10 +98,10 @@ public class Reservation {
         Payment previous = this.payment;
         this.payment = payment;
         if (previous != null) {
-            previous.setReservation(null);
+            previous.linkReservation(null);
         }
         if (payment != null) {
-            payment.setReservation(this);
+            payment.linkReservation(this);
         }
     }
 }

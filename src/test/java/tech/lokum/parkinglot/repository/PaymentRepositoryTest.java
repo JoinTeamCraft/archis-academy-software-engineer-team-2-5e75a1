@@ -29,7 +29,7 @@ class PaymentRepositoryTest {
     @Autowired private ParkingLotRepository parkingLotRepository;
 
     @Test
-    void findByReservation_ShouldReturnPayment_WhenExists() {
+    void findByReservationId_ShouldReturnPayment_WhenExists() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
 
         Payment payment = createPayment(reservation);
@@ -42,7 +42,7 @@ class PaymentRepositoryTest {
     }
 
     @Test
-    void findByReservation_ShouldReturnEmpty_WhenNoPayment() {
+    void findByReservationId_ShouldReturnEmpty_WhenNoPayment() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
 
         assertThat(paymentRepository.findByReservationId(reservation.getId())).isEmpty();
@@ -95,7 +95,6 @@ class PaymentRepositoryTest {
         payment.setCurrency(Payment.Currency.INR);
         payment.setMethod(Payment.PaymentMethod.CARD);
         payment.setStatus(Payment.Status.PENDING);
-        payment.setReservation(reservation);
         reservation.setPayment(payment);
         return payment;
     }

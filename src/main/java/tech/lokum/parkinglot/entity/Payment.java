@@ -63,7 +63,7 @@ public class Payment {
     /**
      * Owning-side FK update; use {@link Reservation#setPayment(Payment)} to keep both sides consistent.
      */
-    public void setReservation(Reservation reservation) {
+    void linkReservation(Reservation reservation) {
         this.reservation = reservation;
     }
     public BigDecimal getAmount() { return amount; }
