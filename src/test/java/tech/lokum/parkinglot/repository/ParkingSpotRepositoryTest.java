@@ -88,7 +88,7 @@ class ParkingSpotRepositoryTest {
     private ParkingSpot createSpot(ParkingLot lot, ParkingSpot.SpotType type, ParkingSpot.SpotStatus status) {
         ParkingSpot spot = new ParkingSpot();
         spot.setParkingLot(lot);
-        spot.setSpotNumber(UUID.randomUUID().toString().substring(0, 8));
+        spot.setSpotNumber(UUID.randomUUID().toString());
         spot.setType(type);
         spot.setStatus(status);
         return spot;

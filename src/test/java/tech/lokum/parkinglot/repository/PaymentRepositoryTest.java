@@ -34,9 +34,9 @@ class PaymentRepositoryTest {
 
         Payment payment = createPayment(reservation);
         paymentRepository.saveAndFlush(payment);
-        reservationRepository.saveAndFlush(reservation);
+        paymentRepository.flush();
 
-        Optional<Payment> found = paymentRepository.findByReservation(reservation);
+        Optional<Payment> found = paymentRepository.findByReservationId(reservation.getId());
         assertThat(found).isPresent();
         assertThat(found.get().getAmount()).isEqualByComparingTo(new BigDecimal("10.00"));
     }
@@ -45,7 +45,7 @@ class PaymentRepositoryTest {
     void findByReservation_ShouldReturnEmpty_WhenNoPayment() {
         Reservation reservation = createReservation(Reservation.Status.CONFIRMED);
 
-        assertThat(paymentRepository.findByReservation(reservation)).isEmpty();
+        assertThat(paymentRepository.findByReservationId(reservation.getId())).isEmpty();
     }
 
     @Test
@@ -95,6 +95,7 @@ class PaymentRepositoryTest {
         payment.setCurrency(Payment.Currency.INR);
         payment.setMethod(Payment.PaymentMethod.CARD);
         payment.setStatus(Payment.Status.PENDING);
+        payment.setReservation(reservation);
         reservation.setPayment(payment);
         return payment;
     }
