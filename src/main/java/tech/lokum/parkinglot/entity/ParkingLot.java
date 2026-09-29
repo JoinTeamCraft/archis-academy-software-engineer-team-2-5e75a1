@@ -11,30 +11,26 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represents a parking lot owned by an operator.
- * Contains multiple parking spots.
- * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
- * method deactivateSpot(ParkingSpot) requires service level validation that the spot is not active/occupied
- * out of service while preserving reservation history and FK relationships.
+ * Uniqueness of (name, address) is enforced only among ACTIVE lots.
  *
- * <p><strong>Invariant:</strong> every {@code ParkingLot} must belong to an {@link User operator}.
- * The {@code operator_id} column is {@code NOT NULL} in the database (see V1 migration) and
- * {@code @JoinColumn(nullable = false)} is declared on the field. {@link #setOperator(User)}
- * enforces non-null at the Java level as well, so callers receive an immediate
- * {@link NullPointerException} rather than a cryptic database error. Use
- * {@link User#addParkingLot(ParkingLot)} to set both sides of the bidirectional association.
+ * <p>JPA/Hibernate's {@code @UniqueConstraint} cannot express a partial
+ * index, so the uniqueness rule is enforced by the PostgreSQL partial
+ * unique index created by Flyway:
  *
- * <p>Uniqueness of (name, address) is enforced only among ACTIVE lots. Since JPA/Hibernate's
- * {@code @UniqueConstraint} cannot express a partial/filtered index, that constraint is created
- * directly in the database migration (see {@code V2__parking_lot_partial_unique_index.sql}) rather
- * than declared here. {@link #UNIQUE_NAME_ADDRESS_CONSTRAINT} still names that DB-level index so
- * {@code GlobalExceptionHandler} can recognize the violation and map it to a 409.
+ * <pre>
+ * CREATE UNIQUE INDEX uk_parking_lot_active_name_address
+ * ON parking_lots (name, address)
+ * WHERE status = 'ACTIVE';
+ * </pre>
+ *
+ * <p>The index name is exposed here so the exception handler can identify
+ * this specific database integrity violation and return HTTP 409.
  */
 @Entity
 @Table(name = "parking_lots")
 public class ParkingLot {
 
-    public static final String UNIQUE_NAME_ADDRESS_CONSTRAINT = "uk_parking_lot_name_address";
+    public static final String ACTIVE_NAME_ADDRESS_UNIQUE_INDEX = "uk_parking_lot_active_name_address";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

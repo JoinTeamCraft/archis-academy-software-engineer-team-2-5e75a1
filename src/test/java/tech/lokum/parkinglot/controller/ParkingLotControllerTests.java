@@ -1,5 +1,6 @@
 package tech.lokum.parkinglot.controller;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,113 +36,341 @@ class ParkingLotControllerTests {
     @Autowired
     private UserRepository userRepository;
 
+    // -------------------------------------------------------------------------
+    // Create parking lot
+    // -------------------------------------------------------------------------
+
     @Test
     void createsParkingLotAndReturnsCreatedResource() throws Exception {
-        User operator = saveOperator("create-lot@example.com", User.Role.OPERATOR);
+        User operator = saveOperator(
+                "create-lot@example.com",
+                User.Role.OPERATOR
+        );
+
         long countBefore = parkingLotRepository.count();
+
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(createRequest(operator.getId(), "Central Garage", "123 Main St", 120)))
+                        .content(createRequest(
+                                operator.getId(),
+                                "Central Garage",
+                                "123 Main St",
+                                120
+                        )))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("Central Garage"))
                 .andExpect(jsonPath("$.location").value("123 Main St"))
                 .andExpect(jsonPath("$.capacity").value(120));
-        assertEquals(countBefore + 1, parkingLotRepository.count());
-        ParkingLot createdLot = parkingLotRepository.findAll().stream()
+
+        assertEquals(
+                countBefore + 1,
+                parkingLotRepository.count()
+        );
+
+        ParkingLot createdLot = parkingLotRepository.findAll()
+                .stream()
                 .filter(lot -> "Central Garage".equals(lot.getName()))
                 .findFirst()
                 .orElseThrow();
-        assertEquals(operator.getId(), createdLot.getOperator().getId());
+
+        assertEquals(
+                operator.getId(),
+                createdLot.getOperator().getId()
+        );
+
+        assertEquals(
+                ParkingLot.Status.ACTIVE,
+                createdLot.getStatus()
+        );
     }
+
+    // -------------------------------------------------------------------------
+    // Validation
+    // -------------------------------------------------------------------------
 
     @Test
     void rejectsInvalidParkingLotWithBadRequest() throws Exception {
-        User operator = saveOperator("invalid-lot@example.com", User.Role.OPERATOR);
+        User operator = saveOperator(
+                "invalid-lot@example.com",
+                User.Role.OPERATOR
+        );
+
         long countBefore = parkingLotRepository.count();
+
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(createRequest(operator.getId(), " ", "", 0)))
+                        .content(createRequest(
+                                operator.getId(),
+                                " ",
+                                "",
+                                0
+                        )))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", containsString("name:")))
                 .andExpect(jsonPath("$.message", containsString("location:")))
                 .andExpect(jsonPath("$.message", containsString("capacity:")));
-        assertEquals(countBefore, parkingLotRepository.count());
+
+        assertEquals(
+                countBefore,
+                parkingLotRepository.count()
+        );
     }
 
     @Test
-    void rejectsDuplicateActiveParkingLotAfterTrimmingInput() throws Exception {
-        User operator = saveOperator("duplicate-lot@example.com", User.Role.OPERATOR);
-        String body = createRequest(operator.getId(), "Duplicate Garage", "50 Main St", 20);
+    void requiresPositiveOperatorId() throws Exception {
+
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(body))
+                        .content("""
+                                {
+                                    "name": "Missing Operator",
+                                    "location": "92 Main St",
+                                    "capacity": 10
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("operatorId:")));
+
+        mockMvc.perform(post("/api/parking-lots")
+                        .contentType(APPLICATION_JSON)
+                        .content(createRequest(
+                                0L,
+                                "Invalid Operator",
+                                "93 Main St",
+                                10
+                        )))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(containsString("operatorId: must be greater than 0")));
+    }
+
+    // -------------------------------------------------------------------------
+    // Active parking lot uniqueness
+    // -------------------------------------------------------------------------
+
+    @Test
+    void rejectsDuplicateActiveParkingLotAfterTrimmingInput() throws Exception {
+        User operator = saveOperator(
+                "duplicate-lot@example.com",
+                User.Role.OPERATOR
+        );
+
+        mockMvc.perform(post("/api/parking-lots")
+                        .contentType(APPLICATION_JSON)
+                        .content(createRequest(
+                                operator.getId(),
+                                "Duplicate Garage",
+                                "50 Main St",
+                                20
+                        )))
                 .andExpect(status().isCreated());
+
         long countAfterFirstCreate = parkingLotRepository.count();
 
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(createRequest(operator.getId(), " Duplicate Garage ", " 50 Main St ", 20)))
+                        .content(createRequest(
+                                operator.getId(),
+                                " Duplicate Garage ",
+                                " 50 Main St ",
+                                20
+                        )))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", containsString("already exists")));
+                .andExpect(jsonPath("$.message")
+                        .value("A parking lot already exists with this name and location"));
 
-        assertEquals(countAfterFirstCreate, parkingLotRepository.count());
+        assertEquals(
+                countAfterFirstCreate,
+                parkingLotRepository.count()
+        );
     }
 
     @Test
-    void allowsCreatingActiveLotWhenOnlyMatchingLotIsInactive() throws Exception {
-        // Uniqueness applies only among ACTIVE lots, so a previously deactivated
-        // lot with the same name/address should not block a brand-new active one.
-        User operator = saveOperator("inactive-lot@example.com", User.Role.OPERATOR);
-        ParkingLot inactiveLot = new ParkingLot();
-        inactiveLot.setName("Inactive Garage");
-        inactiveLot.setLocation("60 Main St");
-        inactiveLot.setCapacity(20);
-        inactiveLot.setStatus(ParkingLot.Status.INACTIVE);
-        operator.addParkingLot(inactiveLot);
-        parkingLotRepository.saveAndFlush(inactiveLot);
+    void rejectsDuplicateActiveParkingLotWithExactSameNameAndAddress()
+            throws Exception {
 
-        long countBeforeCreate = parkingLotRepository.count();
+        User operator = saveOperator(
+                "duplicate-exact@example.com",
+                User.Role.OPERATOR
+        );
+
+        saveLot(
+                operator,
+                "Central Parking",
+                "100 Main St",
+                ParkingLot.Status.ACTIVE
+        );
+
+        long countBefore = parkingLotRepository.count();
 
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(createRequest(operator.getId(), "Inactive Garage", "60 Main St", 20)))
+                        .content(createRequest(
+                                operator.getId(),
+                                "Central Parking",
+                                "100 Main St",
+                                50
+                        )))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message")
+                        .value("A parking lot already exists with this name and location"));
+
+        assertEquals(
+                countBefore,
+                parkingLotRepository.count()
+        );
+    }
+
+    @Test
+    void allowsActiveLotWhenMatchingLotIsInactive() throws Exception {
+        User operator = saveOperator(
+                "inactive-lot@example.com",
+                User.Role.OPERATOR
+        );
+
+        saveLot(
+                operator,
+                "Inactive Garage",
+                "60 Main St",
+                ParkingLot.Status.INACTIVE
+        );
+
+        long countBefore = parkingLotRepository.count();
+
+        mockMvc.perform(post("/api/parking-lots")
+                        .contentType(APPLICATION_JSON)
+                        .content(createRequest(
+                                operator.getId(),
+                                "Inactive Garage",
+                                "60 Main St",
+                                20
+                        )))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Inactive Garage"))
-                .andExpect(jsonPath("$.location").value("60 Main St"));
+                .andExpect(jsonPath("$.location").value("60 Main St"))
+                .andExpect(jsonPath("$.capacity").value(20));
 
-        assertEquals(countBeforeCreate + 1, parkingLotRepository.count());
+        assertEquals(
+                countBefore + 1,
+                parkingLotRepository.count()
+        );
+
+        long matchingActiveLots = parkingLotRepository.findAll()
+                .stream()
+                .filter(lot -> "Inactive Garage".equals(lot.getName()))
+                .filter(lot -> "60 Main St".equals(lot.getLocation()))
+                .filter(lot -> lot.getStatus() == ParkingLot.Status.ACTIVE)
+                .count();
+
+        assertEquals(1, matchingActiveLots);
     }
 
     @Test
     void allowsMultipleInactiveLotsWithSameNameAndAddress() {
-        // Two historical/inactive rows with the same name+address must coexist,
-        // since the unique index only covers status = 'ACTIVE'.
-        User operator = saveOperator("multi-inactive-lot@example.com", User.Role.OPERATOR);
-        saveLot(operator, "Retired Garage", "70 Main St", ParkingLot.Status.INACTIVE);
 
-        // Should not throw: no active-scoped conflict, and the DB index doesn't apply here.
-        saveLot(operator, "Retired Garage", "70 Main St", ParkingLot.Status.INACTIVE);
+        User operator = saveOperator(
+                "multi-inactive-lot@example.com",
+                User.Role.OPERATOR
+        );
+
+        saveLot(
+                operator,
+                "Retired Garage",
+                "70 Main St",
+                ParkingLot.Status.INACTIVE
+        );
+
+        saveLot(
+                operator,
+                "Retired Garage",
+                "70 Main St",
+                ParkingLot.Status.INACTIVE
+        );
+
+        long inactiveCount = parkingLotRepository.findAll()
+                .stream()
+                .filter(lot -> "Retired Garage".equals(lot.getName()))
+                .filter(lot -> "70 Main St".equals(lot.getLocation()))
+                .filter(lot -> lot.getStatus() == ParkingLot.Status.INACTIVE)
+                .count();
+
+        assertEquals(2, inactiveCount);
     }
 
-    /**
-     * Verifies that the DB-level partial unique index (V2 Flyway migration) blocks a second
-     * ACTIVE lot with the same name+address even when the service pre-check is bypassed.
-     *
-     * <p>Disabled in the H2-backed test suite because H2 does not support
-     * {@code CREATE UNIQUE INDEX … WHERE status = 'ACTIVE'} (partial/filtered indexes).
-     * Re-enable this test when running against a real PostgreSQL instance, e.g. via
-     * Testcontainers with {@code @Tag("integration")}.
-     */
-    @org.junit.jupiter.api.Disabled("H2 does not support partial unique indexes (WHERE clause); " +
-            "run against PostgreSQL via Testcontainers to verify the V2 Flyway migration.")
     @Test
+    void allowsInactiveLotWithSameNameAndAddressAsActiveLot() {
+
+        User operator = saveOperator(
+                "active-inactive-lot@example.com",
+                User.Role.OPERATOR
+        );
+
+        saveLot(
+                operator,
+                "Mixed Status Garage",
+                "75 Main St",
+                ParkingLot.Status.ACTIVE
+        );
+
+        // This should be allowed because the partial unique index
+        // only applies to ACTIVE rows.
+        saveLot(
+                operator,
+                "Mixed Status Garage",
+                "75 Main St",
+                ParkingLot.Status.INACTIVE
+        );
+
+        long matchingLots = parkingLotRepository.findAll()
+                .stream()
+                .filter(lot -> "Mixed Status Garage".equals(lot.getName()))
+                .filter(lot -> "75 Main St".equals(lot.getLocation()))
+                .count();
+
+        assertEquals(2, matchingLots);
+    }
+
+    // -------------------------------------------------------------------------
+    // Database partial unique index
+    // -------------------------------------------------------------------------
+
+    /**
+     * Verifies that the PostgreSQL partial unique index prevents duplicate
+     * ACTIVE parking lots even when the application-level duplicate check
+     * is bypassed.
+     *
+     * <p>This test is disabled for the H2 test profile because H2 does not
+     * provide the same PostgreSQL partial-index behavior used by the
+     * production database.
+     *
+     * <p>Run this test against PostgreSQL, preferably using Testcontainers.
+     */
+    @Test
+    @Disabled(
+            "Requires PostgreSQL because the production partial unique index "
+                    + "uses WHERE status = 'ACTIVE'"
+    )
     void databaseIndexPreventsDuplicateActiveNameAndAddressEvenIfAppCheckIsBypassed() {
-        // Belt-and-suspenders: even if the service-level pre-check were skipped,
-        // the partial unique index must still stop two ACTIVE rows from colliding.
-        User operator = saveOperator("constraint-lot@example.com", User.Role.OPERATOR);
-        saveLot(operator, "Constraint Garage", "80 Main St", ParkingLot.Status.ACTIVE);
-        ParkingLot duplicateActiveLot = createLot(operator, "Constraint Garage", "80 Main St", ParkingLot.Status.ACTIVE);
+
+        User operator = saveOperator(
+                "constraint-lot@example.com",
+                User.Role.OPERATOR
+        );
+
+        saveLot(
+                operator,
+                "Constraint Garage",
+                "80 Main St",
+                ParkingLot.Status.ACTIVE
+        );
+
+        ParkingLot duplicateActiveLot = createLot(
+                operator,
+                "Constraint Garage",
+                "80 Main St",
+                ParkingLot.Status.ACTIVE
+        );
 
         assertThrows(
                 DataIntegrityViolationException.class,
@@ -149,96 +378,169 @@ class ParkingLotControllerTests {
         );
     }
 
-    private void saveLot(User operator, String name, String location, ParkingLot.Status status) {
-        parkingLotRepository.saveAndFlush(createLot(operator, name, location, status));
-    }
-
-    private ParkingLot createLot(User operator, String name, String location, ParkingLot.Status status) {
-        ParkingLot lot = new ParkingLot();
-        lot.setName(name);
-        lot.setLocation(location);
-        lot.setCapacity(20);
-        lot.setStatus(status);
-        operator.addParkingLot(lot);
-        return lot;
-    }
+    // -------------------------------------------------------------------------
+    // Operator validation
+    // -------------------------------------------------------------------------
 
     @Test
     void rejectsUnknownOperatorId() throws Exception {
+
+        long unknownOperatorId = Long.MAX_VALUE;
+
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(createRequest(Long.MAX_VALUE, "Missing Operator Lot", "90 Main St", 10)))
+                        .content(createRequest(
+                                unknownOperatorId,
+                                "Missing Operator Lot",
+                                "90 Main St",
+                                10
+                        )))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Operator " + Long.MAX_VALUE + " was not found"));
+                .andExpect(jsonPath("$.message")
+                        .value("Operator " + unknownOperatorId + " was not found"));
     }
 
     @Test
     void rejectsUserThatIsNotAnOperator() throws Exception {
-        User customer = saveOperator("customer-lot@example.com", User.Role.CUSTOMER);
+
+        User customer = saveOperator(
+                "customer-lot@example.com",
+                User.Role.CUSTOMER
+        );
+
         mockMvc.perform(post("/api/parking-lots")
                         .contentType(APPLICATION_JSON)
-                        .content(createRequest(customer.getId(), "Customer Lot", "91 Main St", 10)))
+                        .content(createRequest(
+                                customer.getId(),
+                                "Customer Lot",
+                                "91 Main St",
+                                10
+                        )))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Only operators can create parking lots"));
-    }
-
-    @Test
-    void requiresPositiveOperatorId() throws Exception {
-        mockMvc.perform(post("/api/parking-lots")
-                        .contentType(APPLICATION_JSON)
-                        .content("{\"name\":\"Missing Operator\",\"location\":\"92 Main St\",\"capacity\":10}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", containsString("operatorId:")));
-
-        mockMvc.perform(post("/api/parking-lots")
-                        .contentType(APPLICATION_JSON)
-                        .content(createRequest(0L, "Invalid Operator", "93 Main St", 10)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", containsString("operatorId: must be greater than 0")));
+                .andExpect(jsonPath("$.message")
+                        .value("Only operators can create parking lots"));
     }
 
     // -------------------------------------------------------------------------
-    // Operator-is-mandatory invariant – integration layer
+    // Entity invariant
     // -------------------------------------------------------------------------
 
     @Test
     void setOperatorToNullThrowsImmediatelyBeforeAnyDatabaseCall() {
-        // The Java-level null-guard on ParkingLot#setOperator must fire before
-        // the entity reaches the persistence layer, giving callers a clear message.
+
         ParkingLot lot = new ParkingLot();
-        NullPointerException ex = assertThrows(
+
+        NullPointerException exception = assertThrows(
                 NullPointerException.class,
                 () -> lot.setOperator(null)
         );
-        assertEquals("operator must not be null", ex.getMessage());
+
+        assertEquals(
+                "operator must not be null",
+                exception.getMessage()
+        );
     }
+
+    // -------------------------------------------------------------------------
+    // OpenAPI documentation
+    // -------------------------------------------------------------------------
 
     @Test
     void publishesCreateEndpointInOpenApiDocumentation() throws Exception {
+
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.summary").value("Create a parking lot"))
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['201']").exists())
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['400']").exists())
-                .andExpect(jsonPath("$.paths['/api/parking-lots'].post.responses['409']").exists());
+                .andExpect(jsonPath(
+                        "$.paths['/api/parking-lots'].post.summary"
+                ).value("Create a parking lot"))
+                .andExpect(jsonPath(
+                        "$.paths['/api/parking-lots'].post.responses['201']"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.paths['/api/parking-lots'].post.responses['400']"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.paths['/api/parking-lots'].post.responses['403']"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.paths['/api/parking-lots'].post.responses['404']"
+                ).exists())
+                .andExpect(jsonPath(
+                        "$.paths['/api/parking-lots'].post.responses['409']"
+                ).exists());
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
+    // Test helpers
     // -------------------------------------------------------------------------
 
     private User saveOperator(String email, User.Role role) {
-        User operator = new User();
-        operator.setName("Test User");
-        operator.setEmail(email);
-        operator.setPasswordHash("test-password-hash");
-        operator.setRole(role);
-        return userRepository.saveAndFlush(operator);
+
+        User user = new User();
+
+        user.setName("Test User");
+        user.setEmail(email);
+        user.setPasswordHash("test-password-hash");
+        user.setRole(role);
+
+        return userRepository.saveAndFlush(user);
     }
 
-    private String createRequest(Long operatorId, String name, String location, int capacity) {
-        return "{\"operatorId\":" + operatorId + ",\"name\":\"" + name
-                + "\",\"location\":\"" + location + "\",\"capacity\":" + capacity + "}";
+    private ParkingLot createLot(
+            User operator,
+            String name,
+            String location,
+            ParkingLot.Status status
+    ) {
+
+        ParkingLot lot = new ParkingLot();
+
+        lot.setName(name);
+        lot.setLocation(location);
+        lot.setCapacity(20);
+        lot.setStatus(status);
+
+        operator.addParkingLot(lot);
+
+        return lot;
+    }
+
+    private void saveLot(
+            User operator,
+            String name,
+            String location,
+            ParkingLot.Status status
+    ) {
+
+        parkingLotRepository.saveAndFlush(
+                createLot(
+                        operator,
+                        name,
+                        location,
+                        status
+                )
+        );
+    }
+
+    private String createRequest(
+            Long operatorId,
+            String name,
+            String location,
+            int capacity
+    ) {
+
+        return """
+                {
+                    "operatorId": %d,
+                    "name": "%s",
+                    "location": "%s",
+                    "capacity": %d
+                }
+                """.formatted(
+                operatorId,
+                name,
+                location,
+                capacity
+        );
     }
 }
-

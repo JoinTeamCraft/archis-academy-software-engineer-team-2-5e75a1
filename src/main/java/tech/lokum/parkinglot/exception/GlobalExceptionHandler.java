@@ -122,18 +122,25 @@ public class GlobalExceptionHandler {
 
     private boolean isParkingLotDuplicate(Throwable exception) {
         Throwable cause = exception;
+
         while (cause != null) {
-            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation
-                    && ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT.equals(violation.getConstraintName())) {
-                return true;
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException violation) {
+
+                String constraintName = violation.getConstraintName();
+
+                logger.warn(
+                        "Database constraint violation detected: constraintName={}",
+                        constraintName
+                );
+
+                if (ParkingLot.ACTIVE_NAME_ADDRESS_UNIQUE_INDEX.equals(constraintName)) {
+                    return true;
+                }
             }
-            if (cause.getMessage() != null
-                    && cause.getMessage().toLowerCase(java.util.Locale.ROOT)
-                    .contains(ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT)) {
-                return true;
-            }
+
             cause = cause.getCause();
         }
+
         return false;
     }
 }

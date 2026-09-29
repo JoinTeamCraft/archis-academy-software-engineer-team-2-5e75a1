@@ -54,13 +54,36 @@ class GlobalExceptionHandlerTests {
     }
 
     @Test
-    void mapsActiveParkingLotUniqueConstraintToConflict() throws Exception {
+    void mapsActiveParkingLotUniqueIndexToConflict() throws Exception {
         mockMvc.perform(get("/test/duplicate"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message")
                         .value("A parking lot already exists with this name and location"))
                 .andExpect(jsonPath("$.path").value("/test/duplicate"));
+    }
+
+    @Test
+    void mapsOtherDatabaseConstraintViolationToInternalServerError() throws Exception {
+        mockMvc.perform(get("/test/other-constraint"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message")
+                        .value("An unexpected error occurred"))
+                .andExpect(jsonPath("$.path").value("/test/other-constraint"));
+    }
+
+    @Test
+    void doesNotTreatExceptionMessageAsParkingLotDuplicate() throws Exception {
+        mockMvc.perform(get("/test/message-only-duplicate"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message")
+                        .value("An unexpected error occurred"))
+                .andExpect(jsonPath("$.path").value("/test/message-only-duplicate"));
     }
 
     @Test
@@ -93,7 +116,9 @@ class GlobalExceptionHandlerTests {
         mockMvc.perform(get("/test/unexpected"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
-                .andExpect(jsonPath("$.message").value("An unexpected error occurred"))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message")
+                        .value("An unexpected error occurred"))
                 .andExpect(jsonPath("$.path").value("/test/unexpected"));
     }
 
@@ -110,19 +135,77 @@ class GlobalExceptionHandlerTests {
             throw new ValidationException("Start time must be before end time");
         }
 
+        /**
+         * Simulates PostgreSQL/Hibernate reporting a violation of the
+         * partial unique index:
+         *
+         * uk_parking_lot_active_name_address
+         */
         @GetMapping("/test/duplicate")
         void duplicate() {
-            var constraintViolation = new org.hibernate.exception.ConstraintViolationException(
+
+            var constraintViolation =
+                    new org.hibernate.exception.ConstraintViolationException(
+                            "Duplicate parking lot",
+                            new SQLException("Unique index violation"),
+                            ParkingLot.ACTIVE_NAME_ADDRESS_UNIQUE_INDEX
+                    );
+
+            throw new DataIntegrityViolationException(
                     "Duplicate parking lot",
-                    new SQLException("Unique constraint violation"),
-                    ParkingLot.UNIQUE_NAME_ADDRESS_CONSTRAINT
+                    constraintViolation
             );
-            throw new DataIntegrityViolationException("Duplicate parking lot", constraintViolation);
+        }
+
+        /**
+         * Simulates a violation of some unrelated database constraint.
+         * This must NOT be interpreted as a parking-lot duplicate.
+         */
+        @GetMapping("/test/other-constraint")
+        void otherConstraint() {
+
+            var constraintViolation =
+                    new org.hibernate.exception.ConstraintViolationException(
+                            "Some other database constraint",
+                            new SQLException("Constraint violation"),
+                            "some_other_constraint"
+                    );
+
+            throw new DataIntegrityViolationException(
+                    "Some other database constraint",
+                    constraintViolation
+            );
+        }
+
+        /**
+         * The exception message contains the parking-lot index name,
+         * but the actual constraint name is different.
+         *
+         * This verifies that the exception handler does not rely on
+         * substring matching against exception messages.
+         */
+        @GetMapping("/test/message-only-duplicate")
+        void messageOnlyDuplicate() {
+
+            var constraintViolation =
+                    new org.hibernate.exception.ConstraintViolationException(
+                            "Violation involving "
+                                    + ParkingLot.ACTIVE_NAME_ADDRESS_UNIQUE_INDEX,
+                            new SQLException("Constraint violation"),
+                            "some_other_constraint"
+                    );
+
+            throw new DataIntegrityViolationException(
+                    "Violation involving "
+                            + ParkingLot.ACTIVE_NAME_ADDRESS_UNIQUE_INDEX,
+                    constraintViolation
+            );
         }
 
         @PostMapping("/test/validated")
         void validated(@Valid @RequestBody ValidatedRequest request) {
-            // Intentionally empty: request binding validates the body before invoking this method.
+            // Intentionally empty.
+            // Request validation happens before this method is invoked.
         }
 
         @GetMapping("/test/unexpected")
