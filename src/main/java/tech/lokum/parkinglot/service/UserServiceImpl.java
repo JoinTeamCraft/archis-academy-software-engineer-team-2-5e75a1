@@ -3,6 +3,7 @@ package tech.lokum.parkinglot.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import tech.lokum.parkinglot.dto.RegisterRequest;
 import tech.lokum.parkinglot.dto.RegisterResponse;
 import tech.lokum.parkinglot.entity.User;
@@ -15,6 +16,7 @@ import tech.lokum.parkinglot.repository.UserRepository;
  * <p>Handles business logic for registering a new user: validates email uniqueness,
  * hashes the password with {@link PasswordEncoder}, and persists the user.
  */
+@Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
