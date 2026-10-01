@@ -11,15 +11,26 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represents a parking lot owned by an operator.
- * Contains multiple parking spots.
- * Spots are not physically removed from the lot; use {@link #deactivateSpot(ParkingSpot)} to take a spot
- * method deactivateSpot(ParkingSpot) requires service level validation that the spot is not active/occupied
- * out of service while preserving reservation history and FK relationships.
+ * Uniqueness of (name, address) is enforced only among ACTIVE lots.
+ *
+ * <p>JPA/Hibernate's {@code @UniqueConstraint} cannot express a partial
+ * index, so the uniqueness rule is enforced by the PostgreSQL partial
+ * unique index created by Flyway:
+ *
+ * <pre>
+ * CREATE UNIQUE INDEX uk_parking_lot_active_name_address
+ * ON parking_lots (name, address)
+ * WHERE status = 'ACTIVE';
+ * </pre>
+ *
+ * <p>The index name is exposed here so the exception handler can identify
+ * this specific database integrity violation and return HTTP 409.
  */
 @Entity
 @Table(name = "parking_lots")
 public class ParkingLot {
+
+    public static final String ACTIVE_NAME_ADDRESS_UNIQUE_INDEX = "uk_parking_lot_active_name_address";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +41,9 @@ public class ParkingLot {
 
     @Column(nullable = false)
     private String address;
+
+    @Column(nullable = false)
+    private int capacity;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,10 +74,23 @@ public class ParkingLot {
     public void setName(String name) { this.name = name; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
     public Status getStatus() { return status; }
     public void setStatus(Status status) { this.status = status; }
     public User getOperator() { return operator; }
-    public void setOperator(User operator) { this.operator = operator; }
+
+    /**
+     * Sets the owning operator of this parking lot.
+     * Prefer {@link User#addParkingLot(ParkingLot)} to keep both sides of the
+     * bidirectional association in sync.
+     *
+     * @param operator the owning operator; must not be {@code null}
+     * @throws NullPointerException if {@code operator} is {@code null}
+     */
+    public void setOperator(User operator) {
+        this.operator = Objects.requireNonNull(operator, "operator must not be null");
+    }
     public Set<ParkingSpot> getSpots() { return spots; }
     public void setSpots(Set<ParkingSpot> spots) { this.spots = spots; }
 

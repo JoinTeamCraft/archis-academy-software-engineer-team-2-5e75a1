@@ -10,4 +10,5 @@ import java.util.List;
 public interface ParkingLotRepository extends JpaRepository<ParkingLot, Long> {
     List<ParkingLot> findByStatus(ParkingLot.Status status);
     List<ParkingLot> findByOperator(User operator);
+    boolean existsByNameAndAddressAndStatus(String name, String address, ParkingLot.Status status);
 }
